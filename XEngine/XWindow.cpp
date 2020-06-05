@@ -1,0 +1,111 @@
+#include "XWindow.h"
+
+LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
+{
+	switch (msg)
+	{
+	case WM_LBUTTONDOWN:
+		{
+			MessageBox(0, "left mouse down", 0, 0);
+			return 0;
+		}
+	case WM_KEYDOWN:
+		{
+		if (wparam == VK_ESCAPE)
+			{
+				
+			}
+		return 0;
+		}
+	case WM_DESTROY:
+		PostQuitMessage(0);
+		return 0;
+	
+	}
+	return DefWindowProc(hwnd, msg, wparam, lparam);
+}
+
+XWindow* XWindow::xwindow = nullptr;
+
+XWindow::XWindow()
+{
+}
+
+
+XWindow::~XWindow()
+{
+
+}
+
+XWindow * XWindow::GetXwindow()
+{
+	if (xwindow == nullptr)
+	{
+		xwindow = new XWindow();
+	}
+	return xwindow;
+}
+
+bool XWindow::initWindowApp(HINSTANCE hinstance, int show)
+{
+	WNDCLASS wc;
+	wc.style = CS_HREDRAW | CS_VREDRAW;
+	wc.lpfnWndProc = WndProc;
+	wc.cbClsExtra = 0;
+	wc.cbWndExtra = 0;
+	wc.hInstance = hinstance;
+	wc.hIcon = LoadIcon(0, IDI_APPLICATION);
+	wc.hCursor = LoadCursor(0, IDC_ARROW);
+	wc.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
+	wc.lpszMenuName = 0;
+	wc.lpszClassName = "BasicWndclass";
+	
+	if (!RegisterClass(&wc))
+	{
+		MessageBox(0, "RegisterClass File", 0, 0);
+		return false;
+	}
+
+	ghMainWnd = CreateWindow(
+		"BasicWndclass",
+		"Win64Basic",
+		WS_OVERLAPPEDWINDOW,
+		CW_USEDEFAULT,
+		CW_USEDEFAULT,
+		800,
+		600,
+		0,
+		0,
+		hinstance,
+		0
+	);
+	if (ghMainWnd == 0)
+	{
+		MessageBox(0, "CreateWindow File", 0, 0);
+	}
+	ShowWindow(ghMainWnd, SW_SHOWDEFAULT);
+	UpdateWindow(ghMainWnd);
+	return true;
+}
+
+int XWindow::Run()
+{
+	MSG msg = { 0 };
+	int bret = 1;
+	while ((bret = GetMessage(&msg, 0, 0, 0)) != 0)
+	{
+		if (bret == -1)
+		{
+			MessageBox(0, "Getmessage faile",0,0);
+			break;
+		}
+		else
+		{
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
+		}
+	}
+	return (int)msg.wParam;
+}
+
+
