@@ -116,6 +116,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Study.hpp" />
+    <ClInclude Include="XD3dUtil.h" />
     <ClInclude Include="XDirectT.h" />
     <ClInclude Include="XWindow.h" />
   </ItemGroup>
