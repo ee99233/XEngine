@@ -1,12 +1,13 @@
 #include "XWindow.h"
-
+UINT16  XWindow::Width=1280;
+UINT16  XWindow::Height=720;
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
 	switch (msg)
 	{
 	case WM_LBUTTONDOWN:
 		{
-			MessageBox(0, "left mouse down", 0, 0);
+			MessageBox(0, L"left mouse down", 0, 0);
 			return 0;
 		}
 	case WM_KEYDOWN:
@@ -58,22 +59,22 @@ bool XWindow::initWindowApp(HINSTANCE hinstance, int show)
 	wc.hCursor = LoadCursor(0, IDC_ARROW);
 	wc.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
 	wc.lpszMenuName = 0;
-	wc.lpszClassName = "BasicWndclass";
+	wc.lpszClassName = L"BasicWndclass";
 	
 	if (!RegisterClass(&wc))
 	{
-		MessageBox(0, "RegisterClass File", 0, 0);
+		MessageBox(0, L"RegisterClass File", 0, 0);
 		return false;
 	}
 
 	ghMainWnd = CreateWindow(
-		"BasicWndclass",
-		"Win64Basic",
+		L"BasicWndclass",
+		L"Win64Basic",
 		WS_OVERLAPPEDWINDOW,
 		CW_USEDEFAULT,
 		CW_USEDEFAULT,
-		800,
-		600,
+		Width,
+		Height,
 		0,
 		0,
 		hinstance,
@@ -81,7 +82,7 @@ bool XWindow::initWindowApp(HINSTANCE hinstance, int show)
 	);
 	if (ghMainWnd == 0)
 	{
-		MessageBox(0, "CreateWindow File", 0, 0);
+		MessageBox(0, L"CreateWindow File", 0, 0);
 	}
 	ShowWindow(ghMainWnd, SW_SHOWDEFAULT);
 	UpdateWindow(ghMainWnd);
@@ -96,7 +97,7 @@ int XWindow::Run()
 	{
 		if (bret == -1)
 		{
-			MessageBox(0, "Getmessage faile",0,0);
+			MessageBox(0, L"Getmessage faile",0,0);
 			break;
 		}
 		else

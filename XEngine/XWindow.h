@@ -8,9 +8,10 @@ public:
 	static XWindow* GetXwindow();
 	bool initWindowApp(HINSTANCE hinstance, int show);
 	int Run();
-private:
+	static UINT16 Width;
+	static UINT16 Height;
 	HWND ghMainWnd = 0;
-	
+private:
 	static XWindow* xwindow;
 	
 	
