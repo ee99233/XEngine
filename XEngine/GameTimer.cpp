@@ -4,11 +4,14 @@
 
 GameTimer::GameTimer()
 	:msecondPerCount(0.0), mDeltaTime(-1.0),
-	mPauseTime(0.0), mprevtime(0.0),mCurrtime(0.0f),mbsetime(0.0f)
+	mPauseTime(0.0), mprevtime(0.0),mCurrtime(0.0f)
 {
 	INT64 queryf;
 	 QueryPerformanceFrequency((LARGE_INTEGER*)(&queryf));
 	msecondPerCount = 1.0 /(double) queryf;
+	INT64 basetime;
+	QueryPerformanceCounter((LARGE_INTEGER*)(&basetime));
+	mbsetime = basetime;
 }
 
 

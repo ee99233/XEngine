@@ -9,7 +9,7 @@ using namespace std;
 XDirectT* XDirectT::xdirectx = nullptr;
 XDirectT::XDirectT()
 {
-	/*#if defined(DEBUG)||defined(_DEBUG)
+	#if defined(DEBUG)||defined(_DEBUG)
 	{
 		Microsoft::WRL::ComPtr<ID3D12Debug> debugcontrol;
 		if (FAILED(D3D12GetDebugInterface(IID_PPV_ARGS(debugcontrol.GetAddressOf()))))
@@ -38,7 +38,7 @@ XDirectT::XDirectT()
 			return;
 		}
 
-	}*/
+	}
 
 	
 }
@@ -262,10 +262,10 @@ void XDirectT::CreateD3dview()
 
 void XDirectT::CalcFrame()
 {
-	static int frameCnt = 0;
+	static int frameCnt=0;
 	static float timeElaped = 0.0f;
 	++frameCnt;
-	if (gameitimer.Totaltime() - timeElaped >= 1.0f)
+	if ((gameitimer.Totaltime() - timeElaped) >= 1.0f)
 	{
 		int fps = frameCnt;
 		wstring wintext = to_wstring(fps);
