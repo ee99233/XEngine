@@ -1,16 +1,16 @@
 #pragma once
-
 #include "XD3dUtil.h"
+#include "GameTimer.h"
 #include <d3d12.h>
 #include <wrl.h>
 #include <dxgi1_4.h>
 class XDirectT
 {
-	SingletonX(XDirectT, xdirectx)
+	//SingletonX(XDirectT, xdirectx)
 public:
 	XDirectT();
 	~XDirectT();
-
+	static XDirectT* Getdirectx();
 	void LoadApater();
 	void CreateGpuCommand();
 	void FlushCommand();
@@ -18,7 +18,11 @@ public:
 	void CreateRerousce();
 	void CreateSwapchain();
 	void CreateD3dview();
+	void CalcFrame();
+	void UpdateTime();
+	void CreateDefaultBuff();
 private:
+	static XDirectT* xdirectx;
 	Microsoft::WRL::ComPtr<IDXGIFactory4> dxfactory;
 	Microsoft::WRL::ComPtr<ID3D12Device> d3ddevice;
 	Microsoft::WRL::ComPtr<IDXGISwapChain> swapchain;
@@ -38,6 +42,7 @@ private:
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> mdsvheap;
 	Microsoft::WRL::ComPtr<ID3D12Resource> SwpainChianBuff[buffcout];
 	Microsoft::WRL::ComPtr<ID3D12Resource> DepthStencilView;
+	GameTimer gameitimer;
 
 
 };

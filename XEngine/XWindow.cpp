@@ -1,4 +1,5 @@
 #include "XWindow.h"
+#include "XDirectT.h"
 UINT16  XWindow::Width=1280;
 UINT16  XWindow::Height=720;
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
@@ -7,7 +8,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 	{
 	case WM_LBUTTONDOWN:
 		{
-			MessageBox(0, L"left mouse down", 0, 0);
+			//MessageBox(0, L"left mouse down", 0, 0);
 			return 0;
 		}
 	case WM_KEYDOWN:
@@ -92,20 +93,22 @@ bool XWindow::initWindowApp(HINSTANCE hinstance, int show)
 int XWindow::Run()
 {
 	MSG msg = { 0 };
-	int bret = 1;
-	while ((bret = GetMessage(&msg, 0, 0, 0)) != 0)
+	while (msg.message != WM_QUIT)
 	{
-		if (bret == -1)
-		{
-			MessageBox(0, L"Getmessage faile",0,0);
-			break;
-		}
-		else
+		// If there are Window messages then process them.
+		if (PeekMessage(&msg, 0, 0, 0, PM_REMOVE))
 		{
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 		}
+		// Otherwise, do animation/game stuff.
+		else
+		{
+			XDirectT::Getdirectx()->UpdateTime();
+			XDirectT::Getdirectx()->CalcFrame();
+		}
 	}
+
 	return (int)msg.wParam;
 }
 

@@ -1,14 +1,15 @@
 #include "XDirectT.h"
 #include "XWindow.h"
 #include <vector>
-
+#include <string>
 #pragma comment(lib,"D3D12.lib")
 #pragma comment(lib,"DXGI.lib")
 
+using namespace std;
 XDirectT* XDirectT::xdirectx = nullptr;
 XDirectT::XDirectT()
 {
-	#if defined(DEBUG)||defined(_DEBUG)
+	/*#if defined(DEBUG)||defined(_DEBUG)
 	{
 		Microsoft::WRL::ComPtr<ID3D12Debug> debugcontrol;
 		if (FAILED(D3D12GetDebugInterface(IID_PPV_ARGS(debugcontrol.GetAddressOf()))))
@@ -37,9 +38,9 @@ XDirectT::XDirectT()
 			return;
 		}
 
-	}
+	}*/
 
-
+	
 }
 
 
@@ -50,6 +51,15 @@ XDirectT::~XDirectT()
 		delete xdirectx;
 	}
 	
+}
+
+XDirectT * XDirectT::Getdirectx()
+{
+	if (xdirectx == nullptr)
+	{
+		xdirectx = new XDirectT();
+	}
+	return xdirectx;
 }
 
 void XDirectT::LoadApater()
@@ -247,5 +257,37 @@ void XDirectT::CreateD3dview()
 	}
 	D3D12_CPU_DESCRIPTOR_HANDLE dehandel(mdsvheap->GetCPUDescriptorHandleForHeapStart());
 	d3ddevice->CreateDepthStencilView(DepthStencilView.Get(), nullptr, dehandel);
+
+}
+
+void XDirectT::CalcFrame()
+{
+	static int frameCnt = 0;
+	static float timeElaped = 0.0f;
+	++frameCnt;
+	if (gameitimer.Totaltime() - timeElaped >= 1.0f)
+	{
+		int fps = frameCnt;
+		wstring wintext = to_wstring(fps);
+		SetWindowText(XWindow::GetXwindow()->ghMainWnd, wintext.c_str());
+
+		frameCnt = 0;
+		timeElaped += 1.0f;
+	}
+}
+
+void XDirectT::UpdateTime()
+{
+	gameitimer.Tick();
+}
+
+void XDirectT::CreateDefaultBuff()
+{
+	D3D12_INPUT_ELEMENT_DESC died[] =
+	{
+		{"Postion",0,DXGI_FORMAT_R32G32B32A32_FLOAT,0,0,D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,0},
+		{"Color",0,DXGI_FORMAT_R32G32B32A32_FLOAT,0,16,D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,0},
+
+	};
 
 }
