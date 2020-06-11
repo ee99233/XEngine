@@ -1,4 +1,4 @@
-
+#if 0
 template <typename T>
 class ComPtr
 {
@@ -284,4 +284,8 @@ public:
 #endif // (NTDDI_VERSION >= NTDDI_WINBLUE)
 
 };    // ComPtr
+#endif
 
+#if 0
+
+#endif

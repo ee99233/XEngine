@@ -1,16 +1,20 @@
 #pragma once
 #include "XD3dUtil.h"
 #include "GameTimer.h"
-#include <d3d12.h>
-#include <wrl.h>
-#include <dxgi1_4.h>
+//#include <d3d12.h>
+//#include <wrl.h>
+//#include <dxgi1_4.h>
+#include <d3dcommon.h>
+#include <string>
+#include <vector>
+using namespace std;
 class XDirectT
 {
-	//SingletonX(XDirectT, xdirectx)
+	SingletonX(XDirectT, xdirectx)
 public:
 	XDirectT();
 	~XDirectT();
-	static XDirectT* Getdirectx();
+	//static XDirectT* Getdirectx();
 	void LoadApater();
 	void CreateGpuCommand();
 	void FlushCommand();
@@ -20,9 +24,14 @@ public:
 	void CreateD3dview();
 	void CalcFrame();
 	void UpdateTime();
-	void CreateDefaultBuff();
+	void InitVertxIndex();
+	void initPSO();
+	void CreateCbuff();
+	void initRootSingture();
+	Microsoft::WRL::ComPtr<ID3DBlob> ShaderCompile(const  wstring &filename, const  string &pdefine, const   string &ptarget);
+	Microsoft::WRL::ComPtr<ID3D12Resource> CreateDefaultBuff(UINT64 bytesize, Microsoft::WRL::ComPtr<ID3D12Resource>& uploadbufff,void *initdata);
 private:
-	static XDirectT* xdirectx;
+	//static XDirectT* xdirectx;
 	Microsoft::WRL::ComPtr<IDXGIFactory4> dxfactory;
 	Microsoft::WRL::ComPtr<ID3D12Device> d3ddevice;
 	Microsoft::WRL::ComPtr<IDXGISwapChain> swapchain;
@@ -42,8 +51,16 @@ private:
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> mdsvheap;
 	Microsoft::WRL::ComPtr<ID3D12Resource> SwpainChianBuff[buffcout];
 	Microsoft::WRL::ComPtr<ID3D12Resource> DepthStencilView;
+	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> mcbvheap;
+
 	GameTimer gameitimer;
-
-
+	//shaderCompile
+	Microsoft::WRL::ComPtr<ID3DBlob> vsshader;
+	Microsoft::WRL::ComPtr<ID3DBlob> psshafer;
+	//
+	Microsoft::WRL::ComPtr<ID3D12RootSignature> RootSignature;
+	vector<D3D12_INPUT_ELEMENT_DESC> dinputeles;
+	Microsoft::WRL::ComPtr<ID3D12PipelineState> mpso;
+	
 };
 

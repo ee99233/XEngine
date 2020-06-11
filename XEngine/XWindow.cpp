@@ -104,8 +104,8 @@ int XWindow::Run()
 		// Otherwise, do animation/game stuff.
 		else
 		{
-			XDirectT::Getdirectx()->UpdateTime();
-			XDirectT::Getdirectx()->CalcFrame();
+			XDirectT::Getxdirectx()->UpdateTime();
+			XDirectT::Getxdirectx()->CalcFrame();
 		}
 	}
 
