@@ -22,10 +22,10 @@ inline UINT16  Calabuffer(UINT16 bytesize)
 {
 
 	bytesize += 255;
-	bytesize = bytesize & (0X00FF);
+	bytesize = bytesize & ~(0X00FF);
 
 
-	return 1;
+	return bytesize;
 }
 
 
@@ -44,7 +44,7 @@ public:
 		}
 		
 		HRESULT hr = device->CreateCommittedResource(&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD), D3D12_HEAP_FLAG_NONE,
-			CD3DX12_RESOURCE_DESC::Buffer(elemmentsize*elementcount)
+			&CD3DX12_RESOURCE_DESC::Buffer(elemmentsize*elementcount)
 			, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(uploadresource.GetAddressOf()));
 
 		if (FAILED(hr))
@@ -66,7 +66,11 @@ public:
 
 		Mapdata = nullptr;
 	}
-	
+
+	Microsoft::WRL::ComPtr<ID3D12Resource>& Getresource() 
+	{
+		return uploadresource;
+	}
 
 private:
 	Microsoft::WRL::ComPtr<ID3D12Resource> uploadresource;

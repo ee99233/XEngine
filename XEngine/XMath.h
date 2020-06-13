@@ -33,13 +33,19 @@ namespace XMath
 		float y;
 		float z;
 		float w;
+		XMFLOAT4 Color;
 		XVertx4(float x, float y, float z, float w)
 		{
 			this->x = x;
 			this->y = y;
 			this->z = z;
 			this->w = w;
+			Color.x = 1.0f;
+			Color.y = 1.0f;
+			Color.z = 0.0f;
+			Color.w = 0.0f;
 		}
+		
 		
 	};
 	struct  XVertx2

@@ -58,5 +58,8 @@
     <FxCompile Include="Xone.hlsl">
       <Filter>shader</Filter>
     </FxCompile>
+    <FxCompile Include="Xtwo.hlsl">
+      <Filter>shader</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>

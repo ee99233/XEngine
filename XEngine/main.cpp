@@ -3,7 +3,9 @@
 int WINAPI WinMain(HINSTANCE hinstance,HINSTANCE prehinstance,PSTR pCmdLine,int CmdShow)
 {
 	XWindow::GetXwindow()->initWindowApp(hinstance,0);
-	XDirectT::Getxdirectx();
+	 XDirectT::Getdirectx()->InitD3d();
+	 
+	
 	XWindow::GetXwindow()->Run();
 	
 	

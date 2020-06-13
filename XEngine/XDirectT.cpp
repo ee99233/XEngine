@@ -12,36 +12,7 @@ using namespace XMath;
 XDirectT* XDirectT::xdirectx = nullptr;
 XDirectT::XDirectT()
 {
-	#if defined(DEBUG)||defined(_DEBUG)
-	{
-		Microsoft::WRL::ComPtr<ID3D12Debug> debugcontrol;
-		if (FAILED(D3D12GetDebugInterface(IID_PPV_ARGS(debugcontrol.GetAddressOf()))))
-		{
-			return;
-		}
-		debugcontrol->EnableDebugLayer();
-	}
-	#endif
-
-	if (FAILED(CreateDXGIFactory1(IID_PPV_ARGS(dxfactory.GetAddressOf()))))
-	{
-		return;
-	}
-
-	HRESULT hardware = D3D12CreateDevice(nullptr, D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(d3ddevice.GetAddressOf()));
-	if (FAILED(hardware))
-	{
-		Microsoft::WRL::ComPtr<IDXGIAdapter> wrapAdapter;
-		if (FAILED(dxfactory->EnumWarpAdapter(IID_PPV_ARGS(wrapAdapter.GetAddressOf()))))
-		{
-			return;
-		}
-		if (FAILED(D3D12CreateDevice(wrapAdapter.Get(), D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(d3ddevice.GetAddressOf()))))
-		{
-			return;
-		}
-
-	}
+	
 
 	
 }
@@ -56,14 +27,14 @@ XDirectT::~XDirectT()
 	
 }
 
-//XDirectT * XDirectT::Getdirectx()
-//{
-//	if (xdirectx == nullptr)
-//	{
-//		xdirectx = new XDirectT();
-//	}
-//	return xdirectx;
-//}
+XDirectT * XDirectT::Getdirectx()
+{
+	if (xdirectx == nullptr)
+	{
+		xdirectx = new XDirectT();
+	}
+	return xdirectx;
+}
 
 void XDirectT::LoadApater()
 {
@@ -143,6 +114,58 @@ void XDirectT::FlushCommand()
 
 void XDirectT::InitD3d()
 {
+
+#if defined(DEBUG)||defined(_DEBUG)
+	{
+		Microsoft::WRL::ComPtr<ID3D12Debug> debugcontrol;
+		if (FAILED(D3D12GetDebugInterface(IID_PPV_ARGS(debugcontrol.GetAddressOf()))))
+		{
+			return;
+		}
+		debugcontrol->EnableDebugLayer();
+	}
+#endif
+
+	if (FAILED(CreateDXGIFactory1(IID_PPV_ARGS(&dxfactory))))
+	{
+		return;
+	}
+
+	HRESULT hardware = D3D12CreateDevice(nullptr, D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(d3ddevice.GetAddressOf()));
+	if (FAILED(hardware))
+	{
+		Microsoft::WRL::ComPtr<IDXGIAdapter> wrapAdapter;
+		if (FAILED(dxfactory->EnumWarpAdapter(IID_PPV_ARGS(wrapAdapter.GetAddressOf()))))
+		{
+			return;
+		}
+		if (FAILED(D3D12CreateDevice(wrapAdapter.Get(), D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(d3ddevice.GetAddressOf()))))
+		{
+			return;
+		}
+
+	}
+	D3D12_FEATURE_DATA_MULTISAMPLE_QUALITY_LEVELS msQualityLevels;
+	msQualityLevels.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	msQualityLevels.SampleCount = 4;
+	msQualityLevels.Flags = D3D12_MULTISAMPLE_QUALITY_LEVELS_FLAG_NONE;
+	msQualityLevels.NumQualityLevels = 0;
+	d3ddevice->CheckFeatureSupport(
+		D3D12_FEATURE_MULTISAMPLE_QUALITY_LEVELS,
+		&msQualityLevels,
+		sizeof(msQualityLevels));
+
+	
+
+	CreateGpuCommand();
+	CreateRerousce();
+	CreateSwapchain();
+	
+	
+	
+	CreateD3dview();
+	BulidPso();
+	
 }
 
 void XDirectT::CreateRerousce()
@@ -194,19 +217,32 @@ void XDirectT::CreateSwapchain()
 	sd.BufferDesc.Width = XWindow::GetXwindow()->Width;
 	sd.BufferDesc.Height = XWindow::GetXwindow()->Height;
 	sd.BufferDesc.RefreshRate.Numerator = 60;
-	sd.BufferDesc.RefreshRate.Numerator = 1;
-	sd.BufferDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
-	sd.BufferDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
+	sd.BufferDesc.RefreshRate.Denominator = 1;
+	sd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 	sd.BufferDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
-	sd.SampleDesc.Count = 0;
-	sd.SampleDesc.Quality = 1;
+	sd.BufferDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
+	sd.SampleDesc.Count = 1;
+	sd.SampleDesc.Quality = 0;
 	sd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 	sd.BufferCount = 2;
-	sd.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
 	sd.OutputWindow = XWindow::GetXwindow()->ghMainWnd;
 	sd.Windowed = true;
-	sd.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
-	if (FAILED(dxfactory->CreateSwapChain(d3ddevice.Get(), &sd, swapchain.GetAddressOf())))
+	sd.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+	sd.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
+
+
+	
+	
+
+
+
+	
+	
+	//sd.Windowed = true;
+	//sd.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+	//sd.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
+	
+	if (FAILED(dxfactory->CreateSwapChain(mCommandqueue.Get(), &sd, swapchain.GetAddressOf())))
 	{
 		return;
 	}
@@ -218,7 +254,9 @@ void XDirectT::CreateSwapchain()
 
 void XDirectT::CreateD3dview()
 {
-	D3D12_CPU_DESCRIPTOR_HANDLE rtvhandle(mrtvheap->GetCPUDescriptorHandleForHeapStart());
+
+	FlushCommand();
+	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvhandle(mrtvheap->GetCPUDescriptorHandleForHeapStart());
 
 
 	for (int i = 0; i < buffcout; ++i)
@@ -231,6 +269,7 @@ void XDirectT::CreateD3dview()
 
 		d3ddevice->CreateRenderTargetView(SwpainChianBuff[i].Get(), nullptr, rtvhandle);
 		
+		rtvhandle.Offset(1, MrtvDescriptionsize);
 
 	}
 	D3D12_RESOURCE_DESC dd;
@@ -268,9 +307,23 @@ void XDirectT::CreateD3dview()
 	{
 		return;
 	}
-	D3D12_CPU_DESCRIPTOR_HANDLE dehandel(mdsvheap->GetCPUDescriptorHandleForHeapStart());
+	CD3DX12_CPU_DESCRIPTOR_HANDLE dehandel(mdsvheap->GetCPUDescriptorHandleForHeapStart());
 	d3ddevice->CreateDepthStencilView(DepthStencilView.Get(), nullptr, dehandel);
 
+	CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(DepthStencilView.Get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_DEPTH_WRITE));
+	CommandList->Close();
+	ID3D12CommandList* cmdslist[] = { CommandList.Get() };
+	mCommandqueue->ExecuteCommandLists(_countof(cmdslist), cmdslist);
+	FlushCommand();
+
+	mScreenViewport.TopLeftX = 0;
+	mScreenViewport.TopLeftY = 0;
+	mScreenViewport.Width = static_cast<float>(XWindow::GetXwindow()->Width);
+	mScreenViewport.Height = static_cast<float>(XWindow::GetXwindow()->Height);
+	mScreenViewport.MinDepth = 0.0f;
+	mScreenViewport.MaxDepth = 1.0f;
+
+	mScissorRect = { 0, 0, XWindow::GetXwindow()->Width, XWindow::GetXwindow()->Height };
 }
 
 void XDirectT::CalcFrame()
@@ -362,6 +415,20 @@ void XDirectT::initPSO()
 	d3ddevice->CreateGraphicsPipelineState(&dgpsd, IID_PPV_ARGS(mpso.GetAddressOf()));
 }
 
+void XDirectT::BulidShader()
+{
+	vsshader = ShaderCompile(L"\\XEngine\\Xone.hlsl", "VS", "vs_6_0");
+	psshafer = ShaderCompile(L"\\XEngine\\Xtwo.hlsl", "PS", "ps_6_0");
+
+	dinputeles =
+	{
+		{"Postion",0,DXGI_FORMAT_R32G32B32A32_FLOAT,0,0,D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,0},
+		{"Color",0,DXGI_FORMAT_R32G32B32A32_FLOAT,0,16,D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,0},
+	};
+
+
+}
+
 void XDirectT::CreateCbuff()
 {
 
@@ -373,16 +440,47 @@ void XDirectT::initRootSingture()
 	CD3DX12_ROOT_PARAMETER slotRootpa[1];
 	CD3DX12_DESCRIPTOR_RANGE cbvtable;
 	cbvtable.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
-	slotRootpa[0].InitAsDescriptorTable(0, &cbvtable);
+	slotRootpa[0].InitAsDescriptorTable(1, &cbvtable);
 	CD3DX12_ROOT_SIGNATURE_DESC rootsdesc(1, slotRootpa, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 	Microsoft::WRL::ComPtr<ID3DBlob> serializedRootSig = nullptr;
 	Microsoft::WRL::ComPtr<ID3DBlob> errorBlob=nullptr;
-	D3D12SerializeRootSignature(&rootsdesc, D3D_ROOT_SIGNATURE_VERSION_1, serializedRootSig.GetAddressOf(),errorBlob.GetAddressOf());
+	HRESULT hr= D3D12SerializeRootSignature(&rootsdesc, D3D_ROOT_SIGNATURE_VERSION_1, serializedRootSig.GetAddressOf(),errorBlob.GetAddressOf());
 
 	if (FAILED(d3ddevice->CreateRootSignature(0, serializedRootSig->GetBufferPointer(), serializedRootSig->GetBufferSize(), IID_PPV_ARGS(RootSignature.GetAddressOf()))))
 	{
 		return; 
 	}
+
+}
+
+void XDirectT::BulidPso()
+{
+
+	if (FAILED(CommandList->Reset(CommandAlloctor.Get(), nullptr)))
+	{
+		return;
+	}
+
+	BulidCostantBuff();
+	initRootSingture();
+	BulidShader();
+	InitVertxIndex();
+	initPSO();
+
+}
+
+void XDirectT::BulidCostantBuff()
+{
+
+	WorldtoviewbuffPtr = make_unique<UploadBuff<Matrix>>(d3ddevice,1,true);
+	D3D12_GPU_VIRTUAL_ADDRESS dgva=WorldtoviewbuffPtr->Getresource().Get()->GetGPUVirtualAddress();
+	D3D12_CONSTANT_BUFFER_VIEW_DESC dcbvd;
+	dcbvd.BufferLocation = dgva;
+	dcbvd.SizeInBytes = Calabuffer(sizeof(Matrix));
+	d3ddevice->CreateConstantBufferView(&dcbvd, mcbvheap->GetCPUDescriptorHandleForHeapStart());
+	
+
+	
 
 }
 
@@ -395,7 +493,7 @@ Microsoft::WRL::ComPtr<ID3DBlob> XDirectT::ShaderCompile(const wstring &filename
 		Microsoft::WRL::ComPtr<ID3DBlob> errormessage;
 		Microsoft::WRL::ComPtr<ID3DBlob> bytecode;
 		HRESULT hr = S_OK;
-		hr= D3DCompileFromFile(filename.c_str(), nullptr, D3D_COMPILE_STANDARD_FILE_INCLUDE, "VS", "vs_6_0", compileFlags, 0, bytecode.GetAddressOf(), errormessage.GetAddressOf());
+		hr= D3DCompileFromFile(filename.c_str(), nullptr, D3D_COMPILE_STANDARD_FILE_INCLUDE, pdefine.c_str(), ptarget.c_str(), compileFlags, 0, bytecode.GetAddressOf(), errormessage.GetAddressOf());
 		if (errormessage != nullptr)
 		{
 			OutputDebugStringA((char*)errormessage->GetBufferPointer());
@@ -404,6 +502,7 @@ Microsoft::WRL::ComPtr<ID3DBlob> XDirectT::ShaderCompile(const wstring &filename
 		{
 			return NULL; 
 		}
+
 		return bytecode;
 
 
@@ -412,11 +511,7 @@ Microsoft::WRL::ComPtr<ID3DBlob> XDirectT::ShaderCompile(const wstring &filename
 Microsoft::WRL::ComPtr<ID3D12Resource> XDirectT::CreateDefaultBuff(UINT64 bytesize, Microsoft::WRL::ComPtr<ID3D12Resource>& uploadbufff,void* initData)
 {
 
-	dinputeles =
-	{
-		{"Postion",0,DXGI_FORMAT_R32G32B32A32_FLOAT,0,0,D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,0},
-		{"Color",0,DXGI_FORMAT_R32G32B32A32_FLOAT,0,16,D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,0},
-	};
+
 
 	
 	Microsoft::WRL::ComPtr<ID3D12Resource> Default;
@@ -436,10 +531,10 @@ Microsoft::WRL::ComPtr<ID3D12Resource> XDirectT::CreateDefaultBuff(UINT64 bytesi
 	drd.Width = bytesize;
 	drd.MipLevels = 1;
 	drd.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
-	drd.SampleDesc.Count = 0;
-	drd.SampleDesc.Quality = 1;
+	drd.SampleDesc.Count = 1;
+	drd.SampleDesc.Quality = 0;
 
-	if (FAILED(d3ddevice->CreateCommittedResource(&dhp, D3D12_HEAP_FLAG_NONE, &drd, D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(Default.GetAddressOf()))))
+	if (FAILED(d3ddevice->CreateCommittedResource(&dhp, D3D12_HEAP_FLAG_NONE,&CD3DX12_RESOURCE_DESC::Buffer(bytesize), D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(Default.GetAddressOf()))))
 	{
 		return NULL;
 	}

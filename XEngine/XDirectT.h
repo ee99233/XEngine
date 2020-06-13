@@ -7,14 +7,16 @@
 #include <d3dcommon.h>
 #include <string>
 #include <vector>
+#include <memory>
+
 using namespace std;
 class XDirectT
 {
-	SingletonX(XDirectT, xdirectx)
+	//SingletonX(XDirectT, xdirectx)
 public:
 	XDirectT();
 	~XDirectT();
-	//static XDirectT* Getdirectx();
+	static XDirectT* Getdirectx();
 	void LoadApater();
 	void CreateGpuCommand();
 	void FlushCommand();
@@ -26,12 +28,15 @@ public:
 	void UpdateTime();
 	void InitVertxIndex();
 	void initPSO();
+	void BulidShader();
 	void CreateCbuff();
 	void initRootSingture();
+	void BulidPso();
+	void BulidCostantBuff();
 	Microsoft::WRL::ComPtr<ID3DBlob> ShaderCompile(const  wstring &filename, const  string &pdefine, const   string &ptarget);
 	Microsoft::WRL::ComPtr<ID3D12Resource> CreateDefaultBuff(UINT64 bytesize, Microsoft::WRL::ComPtr<ID3D12Resource>& uploadbufff,void *initdata);
 private:
-	//static XDirectT* xdirectx;
+	static XDirectT* xdirectx;
 	Microsoft::WRL::ComPtr<IDXGIFactory4> dxfactory;
 	Microsoft::WRL::ComPtr<ID3D12Device> d3ddevice;
 	Microsoft::WRL::ComPtr<IDXGISwapChain> swapchain;
@@ -61,6 +66,12 @@ private:
 	Microsoft::WRL::ComPtr<ID3D12RootSignature> RootSignature;
 	vector<D3D12_INPUT_ELEMENT_DESC> dinputeles;
 	Microsoft::WRL::ComPtr<ID3D12PipelineState> mpso;
+
+	D3D12_VIEWPORT mScreenViewport;
+	D3D12_RECT mScissorRect;
+
+	unique_ptr<UploadBuff<class Matrix>> WorldtoviewbuffPtr;
+	
 	
 };
 

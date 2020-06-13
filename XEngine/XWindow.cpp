@@ -85,7 +85,7 @@ bool XWindow::initWindowApp(HINSTANCE hinstance, int show)
 	{
 		MessageBox(0, L"CreateWindow File", 0, 0);
 	}
-	ShowWindow(ghMainWnd, SW_SHOWDEFAULT);
+	ShowWindow(ghMainWnd, SW_SHOW);
 	UpdateWindow(ghMainWnd);
 	return true;
 }
@@ -104,8 +104,8 @@ int XWindow::Run()
 		// Otherwise, do animation/game stuff.
 		else
 		{
-			XDirectT::Getxdirectx()->UpdateTime();
-			XDirectT::Getxdirectx()->CalcFrame();
+			XDirectT::Getdirectx()->UpdateTime();
+			XDirectT::Getdirectx()->CalcFrame();
 		}
 	}
 
