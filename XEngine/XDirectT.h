@@ -33,6 +33,8 @@ public:
 	void initRootSingture();
 	void BulidPso();
 	void BulidCostantBuff();
+
+	void Draw();
 	Microsoft::WRL::ComPtr<ID3DBlob> ShaderCompile(const  wstring &filename, const  string &pdefine, const   string &ptarget);
 	Microsoft::WRL::ComPtr<ID3D12Resource> CreateDefaultBuff(UINT64 bytesize, Microsoft::WRL::ComPtr<ID3D12Resource>& uploadbufff,void *initdata);
 private:
@@ -48,6 +50,7 @@ private:
 	Microsoft::WRL::ComPtr<ID3D12Fence> commandfence;
 	UINT64 FenseCount=0;
 	static const UINT8 buffcout=2;
+	UINT64 CurrentBuffnum=0;
 	//ResouceDep
 	UINT64 MrtvDescriptionsize;
 	UINT64 MdsvDescriptionsize;
@@ -72,6 +75,7 @@ private:
 
 	unique_ptr<UploadBuff<class Matrix>> WorldtoviewbuffPtr;
 	
+  
 	
 };
 

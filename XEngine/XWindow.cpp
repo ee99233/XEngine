@@ -106,6 +106,7 @@ int XWindow::Run()
 		{
 			XDirectT::Getdirectx()->UpdateTime();
 			XDirectT::Getdirectx()->CalcFrame();
+			XDirectT::Getdirectx()->Draw();
 		}
 	}
 

@@ -4,6 +4,7 @@
 #include <d3dcompiler.h>
 #include "d3dx12.h"
 #include "XMath.h"
+#include <DirectXColors.h>
 #pragma comment(lib,"D3D12.lib")
 #pragma comment(lib,"DXGI.lib")
 #pragma comment(lib,"d3dcompiler.lib")
@@ -160,9 +161,6 @@ void XDirectT::InitD3d()
 	CreateGpuCommand();
 	CreateRerousce();
 	CreateSwapchain();
-	
-	
-	
 	CreateD3dview();
 	BulidPso();
 	
@@ -256,7 +254,10 @@ void XDirectT::CreateD3dview()
 {
 
 	FlushCommand();
+	CommandList->Reset(CommandAlloctor.Get(),nullptr);
 	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvhandle(mrtvheap->GetCPUDescriptorHandleForHeapStart());
+
+
 
 
 	for (int i = 0; i < buffcout; ++i)
@@ -282,8 +283,8 @@ void XDirectT::CreateD3dview()
 	dd.Width = XWindow::GetXwindow()->Width;
 	dd.MipLevels = 1;
 	dd.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
-	dd.SampleDesc.Count = 0;
-	dd.SampleDesc.Quality = 1;
+	dd.SampleDesc.Count = 1;
+	dd.SampleDesc.Quality = 0;
 
 	D3D12_CLEAR_VALUE dv;
 	dv.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
@@ -362,7 +363,7 @@ void XDirectT::InitVertxIndex()
 	dvbv.BufferLocation = VertxGpuBuff->GetGPUVirtualAddress();
 	dvbv.StrideInBytes = sizeof(XVertx4);
 	dvbv.SizeInBytes = 3 * sizeof(XVertx4);
-	CommandList->IASetVertexBuffers(0, 1, &dvbv);
+	//CommandList->IASetVertexBuffers(0, 1, &dvbv);
 
 	UINT16 index[] = { 0,1,2 };
 	const UINT16 inbytesize = 3*sizeof(UINT16);
@@ -374,7 +375,7 @@ void XDirectT::InitVertxIndex()
 	dibv.BufferLocation = indexbuff->GetGPUVirtualAddress();
 	dibv.SizeInBytes = 3*sizeof(UINT16);
 	dibv.Format = DXGI_FORMAT_R16_UINT;
-	CommandList->IASetIndexBuffer(&dibv);
+	//CommandList->IASetIndexBuffer(&dibv);
 
 
 	
@@ -397,28 +398,32 @@ void XDirectT::initPSO()
 	drd.FrontCounterClockwise = false;
 
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC dgpsd;
+	ZeroMemory(&dgpsd, sizeof(D3D12_GRAPHICS_PIPELINE_STATE_DESC));
 	dgpsd.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
 	dgpsd.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
 	dgpsd.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
-	dgpsd.InputLayout = { dinputeles.data(),(UINT16)dinputeles.size() };
+	dgpsd.InputLayout = { dinputeles.data(),(UINT)dinputeles.size() };
 	dgpsd.NumRenderTargets = 1;
 	dgpsd.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 	dgpsd.pRootSignature = RootSignature.Get();
-	dgpsd.RasterizerState = drd;
-	dgpsd.RTVFormats[0] = DXGI_FORMAT_B8G8R8A8_UNORM;
-	dgpsd.SampleDesc.Count = 0;
-	dgpsd.SampleDesc.Quality = 1;
+	dgpsd.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+	dgpsd.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+	dgpsd.SampleDesc.Count = 1;
+	dgpsd.SampleDesc.Quality = 0;
 	dgpsd.SampleMask = UINT_MAX;
-	dgpsd.VS = { vsshader->GetBufferPointer(),vsshader->GetBufferSize() };
-	dgpsd.PS = {psshafer->GetBufferPointer(),psshafer->GetBufferSize()};
+	dgpsd.VS = { reinterpret_cast<BYTE*>(vsshader->GetBufferPointer()),vsshader->GetBufferSize() };
+	dgpsd.PS = { reinterpret_cast<BYTE*>(psshafer->GetBufferPointer()),psshafer->GetBufferSize()};
 	
-	d3ddevice->CreateGraphicsPipelineState(&dgpsd, IID_PPV_ARGS(mpso.GetAddressOf()));
+	if (FAILED(d3ddevice->CreateGraphicsPipelineState(&dgpsd, IID_PPV_ARGS(mpso.GetAddressOf()))))
+	{
+		return;
+	}
 }
 
 void XDirectT::BulidShader()
 {
-	vsshader = ShaderCompile(L"\\XEngine\\Xone.hlsl", "VS", "vs_6_0");
-	psshafer = ShaderCompile(L"\\XEngine\\Xtwo.hlsl", "PS", "ps_6_0");
+	vsshader = ShaderCompile(L"D:\\XEngine\\XEngine\\Xone.hlsl", "VS", "vs_5_0");
+	psshafer = ShaderCompile(L"D:\\XEngine\\XEngine\\Xtwo.hlsl", "PS", "ps_5_0");
 
 	dinputeles =
 	{
@@ -464,9 +469,14 @@ void XDirectT::BulidPso()
 	BulidCostantBuff();
 	initRootSingture();
 	BulidShader();
-	InitVertxIndex();
+	//InitVertxIndex();
 	initPSO();
+	CommandList->Close();
+	ID3D12CommandList* cmdsLists[] = { CommandList.Get() };
+	mCommandqueue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
 
+	// Wait until initialization is complete.
+	FlushCommand();
 }
 
 void XDirectT::BulidCostantBuff()
@@ -481,6 +491,45 @@ void XDirectT::BulidCostantBuff()
 	
 
 	
+
+}
+
+void XDirectT::Draw()
+{
+
+	if (FAILED(CommandAlloctor->Reset()))
+	{
+		return;
+	}
+
+	if (FAILED(CommandList->Reset(CommandAlloctor.Get(), mpso.Get())))
+	{
+		return;
+	}
+	
+	CommandList->RSSetViewports(1, &mScreenViewport);
+	CommandList->RSSetScissorRects(1, &mScissorRect);
+	CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(SwpainChianBuff[CurrentBuffnum].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
+
+
+	CommandList->ClearRenderTargetView(CD3DX12_CPU_DESCRIPTOR_HANDLE(mrtvheap->GetCPUDescriptorHandleForHeapStart(), CurrentBuffnum, MrtvDescriptionsize), Colors::Black, 0, nullptr);
+	CommandList->ClearDepthStencilView(mdsvheap->GetCPUDescriptorHandleForHeapStart(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
+
+	//CommandList->OMSetRenderTargets(1, &CD3DX12_CPU_DESCRIPTOR_HANDLE(mrtvheap->GetCPUDescriptorHandleForHeapStart(), CurrentBuffnum, MrtvDescriptionsize), true, &(mdsvheap->GetCPUDescriptorHandleForHeapStart()));
+
+	CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(SwpainChianBuff[CurrentBuffnum].Get(),
+		D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
+
+	CommandList->Close();
+
+	ID3D12CommandList* cmdlists[] = { CommandList.Get() };
+	mCommandqueue->ExecuteCommandLists(_countof(cmdlists), cmdlists);
+	
+	HRESULT hr= swapchain->Present(0, 0);
+	
+	CurrentBuffnum = (CurrentBuffnum + 1) % 2;
+	FlushCommand();
+
 
 }
 
