@@ -72,6 +72,11 @@ public:
 		return uploadresource;
 	}
 
+	void CopyData(int elementindex,const T &data)
+	{
+		memcpy(&Mapdata[elementindex*elemmentsize],&data,sizeof(T));
+	}
+
 private:
 	Microsoft::WRL::ComPtr<ID3D12Resource> uploadresource;
 	byte* elememt;
@@ -79,3 +84,5 @@ private:
 	byte* Mapdata;
 
 };
+
+

@@ -3,13 +3,11 @@
 #include <vector>
 #include <d3dcompiler.h>
 #include "d3dx12.h"
-#include "XMath.h"
 #include <DirectXColors.h>
 #pragma comment(lib,"D3D12.lib")
 #pragma comment(lib,"DXGI.lib")
 #pragma comment(lib,"d3dcompiler.lib")
 
-using namespace XMath;
 XDirectT* XDirectT::xdirectx = nullptr;
 XDirectT::XDirectT()
 {
@@ -132,7 +130,7 @@ void XDirectT::InitD3d()
 		return;
 	}
 
-	HRESULT hardware = D3D12CreateDevice(nullptr, D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(d3ddevice.GetAddressOf()));
+	HRESULT hardware = D3D12CreateDevice(nullptr, D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&d3ddevice));
 	if (FAILED(hardware))
 	{
 		Microsoft::WRL::ComPtr<IDXGIAdapter> wrapAdapter;
@@ -155,9 +153,6 @@ void XDirectT::InitD3d()
 		D3D12_FEATURE_MULTISAMPLE_QUALITY_LEVELS,
 		&msQualityLevels,
 		sizeof(msQualityLevels));
-
-	
-
 	CreateGpuCommand();
 	CreateRerousce();
 	CreateSwapchain();
@@ -350,31 +345,54 @@ void XDirectT::UpdateTime()
 
 void XDirectT::InitVertxIndex()
 {
-	XVertx4 vertxs[] = { {XVertx4(-1.0f,-1.0f,-1.0f,1.0f)},
-					   {XVertx4(-1.0f,-1.0f,+1.0f,1.0f)},
-					   {XVertx4(+1.0f,-1.0f,-1.0f,1.0f)},
+	XVertx4 vertxs[] = { 
+		 XVertx4({ XMFLOAT3(-1.0f, -1.0f, -1.0f), XMFLOAT4(Colors::White) }),
+		XVertx4({ XMFLOAT3(-1.0f, +1.0f, -1.0f), XMFLOAT4(Colors::Black) }),
+		XVertx4({ XMFLOAT3(+1.0f, +1.0f, -1.0f), XMFLOAT4(Colors::Red) }),
+		XVertx4({ XMFLOAT3(+1.0f, -1.0f, -1.0f), XMFLOAT4(Colors::Green) }),
+		XVertx4({ XMFLOAT3(-1.0f, -1.0f, +1.0f), XMFLOAT4(Colors::Blue) }),
+		XVertx4({ XMFLOAT3(-1.0f, +1.0f, +1.0f), XMFLOAT4(Colors::Yellow) }),
+		XVertx4({ XMFLOAT3(+1.0f, +1.0f, +1.0f), XMFLOAT4(Colors::Cyan) }),
+		XVertx4({ XMFLOAT3(+1.0f, -1.0f, +1.0f), XMFLOAT4(Colors::Magenta) })
+		
 	};
-	const UINT64 bytesize = 3 * sizeof(XVertx4);
-	Microsoft::WRL::ComPtr<ID3D12Resource> VertxGpuBuff;
-	Microsoft::WRL::ComPtr<ID3D12Resource> UploadGpuBuff;
+	const UINT64 bytesize = 8 * sizeof(XVertx4);
+	
+	
 	VertxGpuBuff = CreateDefaultBuff(bytesize, UploadGpuBuff, vertxs);
 
-	D3D12_VERTEX_BUFFER_VIEW dvbv;
-	dvbv.BufferLocation = VertxGpuBuff->GetGPUVirtualAddress();
-	dvbv.StrideInBytes = sizeof(XVertx4);
-	dvbv.SizeInBytes = 3 * sizeof(XVertx4);
+	
 	//CommandList->IASetVertexBuffers(0, 1, &dvbv);
 
-	UINT16 index[] = { 0,1,2 };
-	const UINT16 inbytesize = 3*sizeof(UINT16);
-	Microsoft::WRL::ComPtr<ID3D12Resource> uploadinbuff;
-	Microsoft::WRL::ComPtr<ID3D12Resource> indexbuff;
+	UINT16 index[] = 
+	{ 0, 1, 2,
+		0, 2, 3,
+
+		// back face
+		4, 6, 5,
+		4, 7, 6,
+
+		// left face
+		4, 5, 1,
+		4, 1, 0,
+
+		// right face
+		3, 2, 6,
+		3, 6, 7,
+
+		// top face
+		1, 5, 6,
+		1, 6, 2,
+
+		// bottom face
+		4, 0, 3,
+		4, 3, 7 };
+	const UINT16 inbytesize = 36*sizeof(UINT16);
+	
+	
 
 	indexbuff = CreateDefaultBuff(inbytesize, uploadinbuff,index);
-	D3D12_INDEX_BUFFER_VIEW dibv;
-	dibv.BufferLocation = indexbuff->GetGPUVirtualAddress();
-	dibv.SizeInBytes = 3*sizeof(UINT16);
-	dibv.Format = DXGI_FORMAT_R16_UINT;
+	
 	//CommandList->IASetIndexBuffer(&dibv);
 
 
@@ -383,19 +401,19 @@ void XDirectT::InitVertxIndex()
 
 void XDirectT::initPSO()
 {
-	D3D12_RASTERIZER_DESC drd;
-	drd.FillMode = D3D12_FILL_MODE_SOLID;
-	drd.CullMode = D3D12_CULL_MODE_BACK;
-	drd.DepthBias = 0;//同深度优先级，阴影在墙上但是深度一样，所以要使阴影深度小于墙深度
-	drd.ForcedSampleCount = false;
-	drd.AntialiasedLineEnable = false;
-	drd.MultisampleEnable = false;
-	drd.ConservativeRaster = D3D12_CONSERVATIVE_RASTERIZATION_MODE_ON;
-	drd.DepthBiasClamp = 0;
-	drd.DepthClipEnable = true;
-	drd.ForcedSampleCount = 0;
-	drd.SlopeScaledDepthBias = 0;
-	drd.FrontCounterClockwise = false;
+	//D3D12_RASTERIZER_DESC drd;
+	//drd.FillMode = D3D12_FILL_MODE_SOLID;
+	//drd.CullMode = D3D12_CULL_MODE_NONE;
+	//drd.DepthBias = 0;//同深度优先级，阴影在墙上但是深度一样，所以要使阴影深度小于墙深度
+	//drd.ForcedSampleCount = false;
+	//drd.AntialiasedLineEnable = false;
+	//drd.MultisampleEnable = false;
+	//drd.ConservativeRaster = D3D12_CONSERVATIVE_RASTERIZATION_MODE_ON;
+	//drd.DepthBiasClamp = 0;
+	//drd.DepthClipEnable = true;
+	//drd.ForcedSampleCount = 0;
+	//drd.SlopeScaledDepthBias = 0;
+	//drd.FrontCounterClockwise = false;
 
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC dgpsd;
 	ZeroMemory(&dgpsd, sizeof(D3D12_GRAPHICS_PIPELINE_STATE_DESC));
@@ -422,13 +440,13 @@ void XDirectT::initPSO()
 
 void XDirectT::BulidShader()
 {
-	vsshader = ShaderCompile(L"D:\\XEngine\\XEngine\\Xone.hlsl", "VS", "vs_5_0");
-	psshafer = ShaderCompile(L"D:\\XEngine\\XEngine\\Xtwo.hlsl", "PS", "ps_5_0");
+	vsshader = ShaderCompile(L"D:\\XEngine\\XEngine\\color.hlsl", "VS", "vs_5_0");
+	psshafer = ShaderCompile(L"D:\\XEngine\\XEngine\\color.hlsl", "PS", "ps_5_0");
 
 	dinputeles =
 	{
-		{"Postion",0,DXGI_FORMAT_R32G32B32A32_FLOAT,0,0,D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,0},
-		{"Color",0,DXGI_FORMAT_R32G32B32A32_FLOAT,0,16,D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,0},
+		{"POSTION",0,DXGI_FORMAT_R32G32B32A32_FLOAT,0,0,D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,0},
+		{"COLOR",0,DXGI_FORMAT_R32G32B32A32_FLOAT,0,12,D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,0},
 	};
 
 
@@ -469,7 +487,7 @@ void XDirectT::BulidPso()
 	BulidCostantBuff();
 	initRootSingture();
 	BulidShader();
-	//InitVertxIndex();
+	InitVertxIndex();
 	initPSO();
 	CommandList->Close();
 	ID3D12CommandList* cmdsLists[] = { CommandList.Get() };
@@ -488,6 +506,7 @@ void XDirectT::BulidCostantBuff()
 	dcbvd.BufferLocation = dgva;
 	dcbvd.SizeInBytes = Calabuffer(sizeof(Matrix));
 	d3ddevice->CreateConstantBufferView(&dcbvd, mcbvheap->GetCPUDescriptorHandleForHeapStart());
+
 	
 
 	
@@ -496,6 +515,16 @@ void XDirectT::BulidCostantBuff()
 
 void XDirectT::Draw()
 {
+	D3D12_VERTEX_BUFFER_VIEW dvbv;
+	dvbv.BufferLocation = VertxGpuBuff->GetGPUVirtualAddress();
+	dvbv.StrideInBytes = sizeof(XVertx4);
+	dvbv.SizeInBytes = 8* sizeof(XVertx4);
+
+	D3D12_INDEX_BUFFER_VIEW dibv;
+	dibv.BufferLocation = indexbuff->GetGPUVirtualAddress();
+	dibv.SizeInBytes = 36 * sizeof(UINT16);
+	dibv.Format = DXGI_FORMAT_R16_UINT;
+
 
 	if (FAILED(CommandAlloctor->Reset()))
 	{
@@ -512,10 +541,21 @@ void XDirectT::Draw()
 	CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(SwpainChianBuff[CurrentBuffnum].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
 
 
-	CommandList->ClearRenderTargetView(CD3DX12_CPU_DESCRIPTOR_HANDLE(mrtvheap->GetCPUDescriptorHandleForHeapStart(), CurrentBuffnum, MrtvDescriptionsize), Colors::Black, 0, nullptr);
+	CommandList->ClearRenderTargetView(CD3DX12_CPU_DESCRIPTOR_HANDLE(mrtvheap->GetCPUDescriptorHandleForHeapStart(), CurrentBuffnum, MrtvDescriptionsize), Colors::Blue, 0, nullptr);
 	CommandList->ClearDepthStencilView(mdsvheap->GetCPUDescriptorHandleForHeapStart(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
 
-	//CommandList->OMSetRenderTargets(1, &CD3DX12_CPU_DESCRIPTOR_HANDLE(mrtvheap->GetCPUDescriptorHandleForHeapStart(), CurrentBuffnum, MrtvDescriptionsize), true, &(mdsvheap->GetCPUDescriptorHandleForHeapStart()));
+	CommandList->OMSetRenderTargets(1, &CD3DX12_CPU_DESCRIPTOR_HANDLE(mrtvheap->GetCPUDescriptorHandleForHeapStart(), CurrentBuffnum, MrtvDescriptionsize), true, &(mdsvheap->GetCPUDescriptorHandleForHeapStart()));
+
+	ID3D12DescriptorHeap* descriptorheap[] = {mcbvheap.Get()};
+	CommandList->SetDescriptorHeaps(_countof(descriptorheap), descriptorheap);
+
+	CommandList->SetGraphicsRootSignature(RootSignature.Get());
+	CommandList->IASetVertexBuffers(0, 1, &dvbv);
+	CommandList->IASetIndexBuffer(&dibv);
+	CommandList->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	CommandList->SetGraphicsRootDescriptorTable(0, mcbvheap->GetGPUDescriptorHandleForHeapStart());
+
+	CommandList->DrawIndexedInstanced(12, 1, 0, 0, 0);
 
 	CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(SwpainChianBuff[CurrentBuffnum].Get(),
 		D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
@@ -531,6 +571,30 @@ void XDirectT::Draw()
 	FlushCommand();
 
 
+}
+
+void XDirectT::Update()
+{
+	float x = mRadius * sinf(mPhi)*cosf(mTheta);
+	float z = mRadius * sinf(mPhi)*sinf(mTheta);
+	float y = mRadius * cosf(mPhi);
+
+	// Build the view matrix.
+	XMVECTOR pos = XMVectorSet(x, y, z, 1.0f);
+	XMVECTOR target = XMVectorZero();
+	XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+
+	XMMATRIX view = XMMatrixLookAtLH(pos, target, up);
+	XMStoreFloat4x4(&mView, view);
+
+	XMMATRIX world = XMLoadFloat4x4(&mWorld);
+	XMMATRIX proj = XMLoadFloat4x4(&mProj);
+	XMMATRIX worldViewProj = world * view*proj;
+
+	// Update the constant buffer with the latest worldViewProj matrix.
+	Matrix objConstants;
+	XMStoreFloat4x4(&objConstants.WorldtoviewMatrix, XMMatrixTranspose(worldViewProj));
+	WorldtoviewbuffPtr->CopyData(0, objConstants);
 }
 
 Microsoft::WRL::ComPtr<ID3DBlob> XDirectT::ShaderCompile(const wstring &filename,const string &pdefine,const string &ptarget)
@@ -583,7 +647,7 @@ Microsoft::WRL::ComPtr<ID3D12Resource> XDirectT::CreateDefaultBuff(UINT64 bytesi
 	drd.SampleDesc.Count = 1;
 	drd.SampleDesc.Quality = 0;
 
-	if (FAILED(d3ddevice->CreateCommittedResource(&dhp, D3D12_HEAP_FLAG_NONE,&CD3DX12_RESOURCE_DESC::Buffer(bytesize), D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(Default.GetAddressOf()))))
+	if (FAILED(d3ddevice->CreateCommittedResource(&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT), D3D12_HEAP_FLAG_NONE,&CD3DX12_RESOURCE_DESC::Buffer(bytesize), D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(Default.GetAddressOf()))))
 	{
 		return NULL;
 	}
@@ -593,7 +657,7 @@ Microsoft::WRL::ComPtr<ID3D12Resource> XDirectT::CreateDefaultBuff(UINT64 bytesi
 	dhpd.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
 	dhpd.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
 	dhpd.CreationNodeMask = 1;
-	if (FAILED(d3ddevice->CreateCommittedResource(&dhpd, D3D12_HEAP_FLAG_NONE, &drd, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(uploadbufff.GetAddressOf()))))
+	if (FAILED(d3ddevice->CreateCommittedResource(&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD), D3D12_HEAP_FLAG_NONE, &CD3DX12_RESOURCE_DESC::Buffer(bytesize), D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(uploadbufff.GetAddressOf()))))
 	{
 		return NULL;
 	}
@@ -609,7 +673,8 @@ Microsoft::WRL::ComPtr<ID3D12Resource> XDirectT::CreateDefaultBuff(UINT64 bytesi
 	subreourceData.pData = initData;
 	subreourceData.RowPitch = bytesize;
 	subreourceData.SlicePitch = subreourceData.RowPitch;
-	CommandList->ResourceBarrier(1, &brd);
+	CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(Default.Get(),
+		D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_DEST));
 	UpdateSubresources<1>(CommandList.Get(), Default.Get(), uploadbufff.Get(), 0, 0, 1, &subreourceData);
 	CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(Default.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_GENERIC_READ));
 	return Default;

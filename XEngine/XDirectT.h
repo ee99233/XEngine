@@ -8,8 +8,10 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include "XMath.h"
 
 using namespace std;
+using namespace XMath;
 class XDirectT
 {
 	//SingletonX(XDirectT, xdirectx)
@@ -35,6 +37,7 @@ public:
 	void BulidCostantBuff();
 
 	void Draw();
+	void Update();
 	Microsoft::WRL::ComPtr<ID3DBlob> ShaderCompile(const  wstring &filename, const  string &pdefine, const   string &ptarget);
 	Microsoft::WRL::ComPtr<ID3D12Resource> CreateDefaultBuff(UINT64 bytesize, Microsoft::WRL::ComPtr<ID3D12Resource>& uploadbufff,void *initdata);
 private:
@@ -50,11 +53,11 @@ private:
 	Microsoft::WRL::ComPtr<ID3D12Fence> commandfence;
 	UINT64 FenseCount=0;
 	static const UINT8 buffcout=2;
-	UINT64 CurrentBuffnum=0;
+	UINT CurrentBuffnum=0;
 	//ResouceDep
-	UINT64 MrtvDescriptionsize;
-	UINT64 MdsvDescriptionsize;
-	UINT64 MCbvUavDescriptionsize;
+	UINT MrtvDescriptionsize;
+	UINT MdsvDescriptionsize;
+	UINT MCbvUavDescriptionsize;
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> mrtvheap;
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> mdsvheap;
 	Microsoft::WRL::ComPtr<ID3D12Resource> SwpainChianBuff[buffcout];
@@ -73,9 +76,19 @@ private:
 	D3D12_VIEWPORT mScreenViewport;
 	D3D12_RECT mScissorRect;
 
-	unique_ptr<UploadBuff<class Matrix>> WorldtoviewbuffPtr;
+	unique_ptr<UploadBuff<struct Matrix>> WorldtoviewbuffPtr;
 	
-  
-	
+	XMFLOAT4X4 mWorld = Identity4x4();
+	XMFLOAT4X4 mView = Identity4x4();
+	XMFLOAT4X4 mProj = Identity4x4();
+
+	float mTheta = 1.5f*XM_PI;
+	float mPhi = XM_PIDIV4;
+	float mRadius = 5.0f;
+
+	Microsoft::WRL::ComPtr<ID3D12Resource> VertxGpuBuff;
+	Microsoft::WRL::ComPtr<ID3D12Resource> indexbuff;
+	Microsoft::WRL::ComPtr<ID3D12Resource> uploadinbuff;
+	Microsoft::WRL::ComPtr<ID3D12Resource> UploadGpuBuff;
 };
 

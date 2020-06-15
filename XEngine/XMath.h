@@ -29,23 +29,8 @@ namespace XMath
 {
 	struct XVertx4
 	{
-		float x;
-		float y;
-		float z;
-		float w;
+		XMFLOAT3 Pos;
 		XMFLOAT4 Color;
-		XVertx4(float x, float y, float z, float w)
-		{
-			this->x = x;
-			this->y = y;
-			this->z = z;
-			this->w = w;
-			Color.x = 1.0f;
-			Color.y = 1.0f;
-			Color.z = 0.0f;
-			Color.w = 0.0f;
-		}
-		
 		
 	};
 	struct  XVertx2
@@ -65,7 +50,17 @@ namespace XMath
 
 
 
-	
+	static XMFLOAT4X4 Identity4x4()
+	{
+		static DirectX::XMFLOAT4X4 I(
+			1.0f, 0.0f, 0.0f, 0.0f,
+			0.0f, 1.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 1.0f, 0.0f,
+			0.0f, 0.0f, 0.0f, 1.0f);
+
+		return I;
+	}
+
 
 
 
