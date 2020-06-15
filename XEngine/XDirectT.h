@@ -8,6 +8,7 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <array>
 #include "XMath.h"
 
 using namespace std;

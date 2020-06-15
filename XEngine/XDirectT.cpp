@@ -345,8 +345,8 @@ void XDirectT::UpdateTime()
 
 void XDirectT::InitVertxIndex()
 {
-	XVertx4 vertxs[] = { 
-		 XVertx4({ XMFLOAT3(-1.0f, -1.0f, -1.0f), XMFLOAT4(Colors::White) }),
+	XVertx4 vertxs[8] = {
+		XVertx4({ XMFLOAT3(-1.0f, -1.0f, -1.0f), XMFLOAT4(Colors::White) }),
 		XVertx4({ XMFLOAT3(-1.0f, +1.0f, -1.0f), XMFLOAT4(Colors::Black) }),
 		XVertx4({ XMFLOAT3(+1.0f, +1.0f, -1.0f), XMFLOAT4(Colors::Red) }),
 		XVertx4({ XMFLOAT3(+1.0f, -1.0f, -1.0f), XMFLOAT4(Colors::Green) }),
@@ -356,11 +356,12 @@ void XDirectT::InitVertxIndex()
 		XVertx4({ XMFLOAT3(+1.0f, -1.0f, +1.0f), XMFLOAT4(Colors::Magenta) })
 		
 	};
+
 	const UINT64 bytesize = 8 * sizeof(XVertx4);
 	
 	
 	VertxGpuBuff = CreateDefaultBuff(bytesize, UploadGpuBuff, vertxs);
-
+	int width1= VertxGpuBuff->GetDesc().Width;
 	
 	//CommandList->IASetVertexBuffers(0, 1, &dvbv);
 
@@ -392,7 +393,8 @@ void XDirectT::InitVertxIndex()
 	
 
 	indexbuff = CreateDefaultBuff(inbytesize, uploadinbuff,index);
-	
+	int width2=indexbuff->GetDesc().Width;
+	width1 = VertxGpuBuff->GetDesc().Width;
 	//CommandList->IASetIndexBuffer(&dibv);
 
 
@@ -445,7 +447,7 @@ void XDirectT::BulidShader()
 
 	dinputeles =
 	{
-		{"POSTION",0,DXGI_FORMAT_R32G32B32A32_FLOAT,0,0,D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,0},
+		{"POSITION",0,DXGI_FORMAT_R32G32B32_FLOAT,0,0,D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,0},
 		{"COLOR",0,DXGI_FORMAT_R32G32B32A32_FLOAT,0,12,D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,0},
 	};
 
@@ -501,8 +503,9 @@ void XDirectT::BulidCostantBuff()
 {
 
 	WorldtoviewbuffPtr = make_unique<UploadBuff<Matrix>>(d3ddevice,1,true);
-	D3D12_GPU_VIRTUAL_ADDRESS dgva=WorldtoviewbuffPtr->Getresource().Get()->GetGPUVirtualAddress();
+	D3D12_GPU_VIRTUAL_ADDRESS dgva=WorldtoviewbuffPtr->Getresource()->GetGPUVirtualAddress();
 	D3D12_CONSTANT_BUFFER_VIEW_DESC dcbvd;
+	
 	dcbvd.BufferLocation = dgva;
 	dcbvd.SizeInBytes = Calabuffer(sizeof(Matrix));
 	d3ddevice->CreateConstantBufferView(&dcbvd, mcbvheap->GetCPUDescriptorHandleForHeapStart());
@@ -519,6 +522,8 @@ void XDirectT::Draw()
 	dvbv.BufferLocation = VertxGpuBuff->GetGPUVirtualAddress();
 	dvbv.StrideInBytes = sizeof(XVertx4);
 	dvbv.SizeInBytes = 8* sizeof(XVertx4);
+
+	int width1 = VertxGpuBuff->GetDesc().Width;
 
 	D3D12_INDEX_BUFFER_VIEW dibv;
 	dibv.BufferLocation = indexbuff->GetGPUVirtualAddress();
@@ -555,7 +560,7 @@ void XDirectT::Draw()
 	CommandList->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	CommandList->SetGraphicsRootDescriptorTable(0, mcbvheap->GetGPUDescriptorHandleForHeapStart());
 
-	CommandList->DrawIndexedInstanced(12, 1, 0, 0, 0);
+	CommandList->DrawIndexedInstanced(36, 1, 0, 0, 0);
 
 	CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(SwpainChianBuff[CurrentBuffnum].Get(),
 		D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
@@ -579,6 +584,8 @@ void XDirectT::Update()
 	float z = mRadius * sinf(mPhi)*sinf(mTheta);
 	float y = mRadius * cosf(mPhi);
 
+	XMMATRIX P = XMMatrixPerspectiveFovLH(0.25f*3.1415926535f, 1280.f/720.f, 1.0f, 1000.0f);
+	XMStoreFloat4x4(&mProj, P);
 	// Build the view matrix.
 	XMVECTOR pos = XMVectorSet(x, y, z, 1.0f);
 	XMVECTOR target = XMVectorZero();
@@ -590,10 +597,12 @@ void XDirectT::Update()
 	XMMATRIX world = XMLoadFloat4x4(&mWorld);
 	XMMATRIX proj = XMLoadFloat4x4(&mProj);
 	XMMATRIX worldViewProj = world * view*proj;
+	//XMMATRIX worldViewProj = world;
 
 	// Update the constant buffer with the latest worldViewProj matrix.
 	Matrix objConstants;
 	XMStoreFloat4x4(&objConstants.WorldtoviewMatrix, XMMatrixTranspose(worldViewProj));
+
 	WorldtoviewbuffPtr->CopyData(0, objConstants);
 }
 

@@ -67,9 +67,9 @@ public:
 		Mapdata = nullptr;
 	}
 
-	Microsoft::WRL::ComPtr<ID3D12Resource>& Getresource() 
+	ID3D12Resource* Getresource() 
 	{
-		return uploadresource;
+		return uploadresource.Get();
 	}
 
 	void CopyData(int elementindex,const T &data)

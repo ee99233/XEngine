@@ -11,7 +11,7 @@ cbuffer cbPerObject : register(b0)
 
 struct VertexIn
 {
-	float4 PosL  : POSITION;
+	float3 PosL  : POSITION;
     float4 Color : COLOR;
 };
 
@@ -26,7 +26,7 @@ VertexOut VS(VertexIn vin)
 	VertexOut vout;
 	
 	// Transform to homogeneous clip space.
-	vout.PosH = mul(vin.PosL, gWorldViewProj);
+    vout.PosH = mul(float4(vin.PosL,1.0f), gWorldViewProj);
 	
 	// Just pass vertex color into the pixel shader.
     vout.Color = vin.Color;
