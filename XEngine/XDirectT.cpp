@@ -280,6 +280,7 @@ void XDirectT::CreateD3dview()
 	dd.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
 	dd.SampleDesc.Count = 1;
 	dd.SampleDesc.Quality = 0;
+	
 
 	D3D12_CLEAR_VALUE dv;
 	dv.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
