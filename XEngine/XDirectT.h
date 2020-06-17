@@ -78,6 +78,8 @@ private:
 	D3D12_RECT mScissorRect;
 
 	unique_ptr<UploadBuff<struct Matrix>> WorldtoviewbuffPtr;
+	unique_ptr<UploadBuff<struct Matrix1>> WorldtoviewbuffPtr1;
+
 	
 	XMFLOAT4X4 mWorld = Identity4x4();
 	XMFLOAT4X4 mView = Identity4x4();

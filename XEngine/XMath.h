@@ -43,6 +43,12 @@ namespace XMath
 	struct Matrix
 	{
 		XMFLOAT4X4 WorldtoviewMatrix = Identity4x4();
+		float test = 1.0f;
+	};
+	struct Matrix1
+	{
+		float gtest = 1.0f;
+		float ftest = 1.0f;
 	};
 
 

@@ -443,8 +443,8 @@ void XDirectT::initPSO()
 
 void XDirectT::BulidShader()
 {
-	vsshader = ShaderCompile(L"D:\\XEngine\\XEngine\\color.hlsl", "VS", "vs_5_0");
-	psshafer = ShaderCompile(L"D:\\XEngine\\XEngine\\color.hlsl", "PS", "ps_5_0");
+	vsshader = ShaderCompile(L"D:\\XEngine\\XEngine\\Xone.hlsl", "VS", "vs_5_0");
+	psshafer = ShaderCompile(L"D:\\XEngine\\XEngine\\Xtwo.hlsl", "PS", "ps_5_0");
 
 	dinputeles =
 	{
@@ -463,11 +463,12 @@ void XDirectT::CreateCbuff()
 void XDirectT::initRootSingture()
 {
 
-	CD3DX12_ROOT_PARAMETER slotRootpa[1];
+	CD3DX12_ROOT_PARAMETER slotRootpa[2];
 	CD3DX12_DESCRIPTOR_RANGE cbvtable;
-	cbvtable.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
-	slotRootpa[0].InitAsDescriptorTable(1, &cbvtable);
-	CD3DX12_ROOT_SIGNATURE_DESC rootsdesc(1, slotRootpa, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+	cbvtable.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 2, 0);
+	slotRootpa[0].InitAsConstantBufferView(0);
+	slotRootpa[1].InitAsConstantBufferView(1);
+	CD3DX12_ROOT_SIGNATURE_DESC rootsdesc(2, slotRootpa, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 	Microsoft::WRL::ComPtr<ID3DBlob> serializedRootSig = nullptr;
 	Microsoft::WRL::ComPtr<ID3DBlob> errorBlob=nullptr;
 	HRESULT hr= D3D12SerializeRootSignature(&rootsdesc, D3D_ROOT_SIGNATURE_VERSION_1, serializedRootSig.GetAddressOf(),errorBlob.GetAddressOf());
@@ -504,14 +505,14 @@ void XDirectT::BulidCostantBuff()
 {
 
 	WorldtoviewbuffPtr = make_unique<UploadBuff<Matrix>>(d3ddevice,1,true);
-	D3D12_GPU_VIRTUAL_ADDRESS dgva=WorldtoviewbuffPtr->Getresource()->GetGPUVirtualAddress();
+	/*D3D12_GPU_VIRTUAL_ADDRESS dgva=WorldtoviewbuffPtr->Getresource()->GetGPUVirtualAddress();
 	D3D12_CONSTANT_BUFFER_VIEW_DESC dcbvd;
 	
 	dcbvd.BufferLocation = dgva;
 	dcbvd.SizeInBytes = Calabuffer(sizeof(Matrix));
-	d3ddevice->CreateConstantBufferView(&dcbvd, mcbvheap->GetCPUDescriptorHandleForHeapStart());
+	d3ddevice->CreateConstantBufferView(&dcbvd, mcbvheap->GetCPUDescriptorHandleForHeapStart());*/
 
-	
+	WorldtoviewbuffPtr1 = make_unique<UploadBuff<Matrix1>>(d3ddevice, 1, true);
 
 	
 
@@ -552,15 +553,15 @@ void XDirectT::Draw()
 
 	CommandList->OMSetRenderTargets(1, &CD3DX12_CPU_DESCRIPTOR_HANDLE(mrtvheap->GetCPUDescriptorHandleForHeapStart(), CurrentBuffnum, MrtvDescriptionsize), true, &(mdsvheap->GetCPUDescriptorHandleForHeapStart()));
 
-	ID3D12DescriptorHeap* descriptorheap[] = {mcbvheap.Get()};
-	CommandList->SetDescriptorHeaps(_countof(descriptorheap), descriptorheap);
+	/*ID3D12DescriptorHeap* descriptorheap[] = {mcbvheap.Get()};
+	CommandList->SetDescriptorHeaps(_countof(descriptorheap), descriptorheap);*/
 
 	CommandList->SetGraphicsRootSignature(RootSignature.Get());
 	CommandList->IASetVertexBuffers(0, 1, &dvbv);
 	CommandList->IASetIndexBuffer(&dibv);
 	CommandList->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	CommandList->SetGraphicsRootDescriptorTable(0, mcbvheap->GetGPUDescriptorHandleForHeapStart());
-
+	CommandList->SetGraphicsRootConstantBufferView(0, WorldtoviewbuffPtr->Getresource()->GetGPUVirtualAddress());
+	CommandList->SetGraphicsRootConstantBufferView(1, WorldtoviewbuffPtr1->Getresource()->GetGPUVirtualAddress());
 	CommandList->DrawIndexedInstanced(36, 1, 0, 0, 0);
 
 	CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(SwpainChianBuff[CurrentBuffnum].Get(),
@@ -603,8 +604,11 @@ void XDirectT::Update()
 	// Update the constant buffer with the latest worldViewProj matrix.
 	Matrix objConstants;
 	XMStoreFloat4x4(&objConstants.WorldtoviewMatrix, XMMatrixTranspose(worldViewProj));
-
+	Matrix1 objConstants1;
+	objConstants1.ftest = 2.0f;
+	objConstants1.gtest = 1.0f;
 	WorldtoviewbuffPtr->CopyData(0, objConstants);
+	WorldtoviewbuffPtr1->CopyData(0, objConstants1);
 }
 
 Microsoft::WRL::ComPtr<ID3DBlob> XDirectT::ShaderCompile(const wstring &filename,const string &pdefine,const string &ptarget)
