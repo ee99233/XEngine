@@ -7,11 +7,13 @@ class StaticMesh
 {
 public:
 
+	StaticMesh();
+	~StaticMesh();
+
 	D3D12_VERTEX_BUFFER_VIEW getVertxView();
 
 	D3D12_INDEX_BUFFER_VIEW GetIndexView();
 
-private:
 	Microsoft::WRL::ComPtr<ID3D12Resource> Vertxbuff;
 	Microsoft::WRL::ComPtr<ID3D12Resource> Indexbuff;
 	Microsoft::WRL::ComPtr<ID3D12Resource> UploadVertx;
@@ -20,6 +22,9 @@ private:
 	UINT VSizeInBytes;
 	UINT VStrideInBytes;
 	UINT ISizeInBytes;
+	UINT indexcount;
+private:
+	
 
 };
 

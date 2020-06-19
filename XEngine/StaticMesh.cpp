@@ -1,5 +1,20 @@
 #include "StaticMesh.h"
 
+
+StaticMesh::StaticMesh()
+{
+
+	
+
+
+
+}
+
+StaticMesh::~StaticMesh()
+{
+
+}
+
 D3D12_VERTEX_BUFFER_VIEW StaticMesh::getVertxView()
 {
 

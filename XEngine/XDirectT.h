@@ -10,7 +10,7 @@
 #include <memory>
 #include <array>
 #include "XMath.h"
-
+#include "StaticMesh.h"
 using namespace std;
 using namespace XMath;
 class XDirectT
@@ -32,16 +32,12 @@ public:
 	void InitVertxIndex();
 	void initPSO();
 	void BulidShader();
-	void CreateCbuff();
 	void initRootSingture();
 	void BulidPso();
 	void BulidCostantBuff();
-
 	void Draw();
 	void Update();
 	Microsoft::WRL::ComPtr<ID3DBlob> ShaderCompile(const  wstring &filename, const  string &pdefine, const   string &ptarget);
-	Microsoft::WRL::ComPtr<ID3D12Resource> CreateDefaultBuff(UINT64 bytesize, Microsoft::WRL::ComPtr<ID3D12Resource>& uploadbufff,void *initdata);
-private:
 	static XDirectT* xdirectx;
 	Microsoft::WRL::ComPtr<IDXGIFactory4> dxfactory;
 	Microsoft::WRL::ComPtr<ID3D12Device> d3ddevice;
@@ -93,5 +89,8 @@ private:
 	Microsoft::WRL::ComPtr<ID3D12Resource> indexbuff;
 	Microsoft::WRL::ComPtr<ID3D12Resource> uploadinbuff;
 	Microsoft::WRL::ComPtr<ID3D12Resource> UploadGpuBuff;
+
+	unique_ptr<StaticMesh> boxMesh;
+
 };
 

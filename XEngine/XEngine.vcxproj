@@ -116,6 +116,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="GameTimer.h" />
+    <ClInclude Include="MeshBulid.h" />
     <ClInclude Include="StaticMesh.h" />
     <ClInclude Include="Study.hpp" />
     <ClInclude Include="XD3dUtil.h" />
@@ -126,6 +127,7 @@
   <ItemGroup>
     <ClCompile Include="GameTimer.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="MeshBulid.cpp" />
     <ClCompile Include="StaticMesh.cpp" />
     <ClCompile Include="XDirectT.cpp" />
     <ClCompile Include="XMath.cpp" />

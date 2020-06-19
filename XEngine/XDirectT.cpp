@@ -4,6 +4,8 @@
 #include <d3dcompiler.h>
 #include "d3dx12.h"
 #include <DirectXColors.h>
+#include "XD3dUtil.h"
+#include "MeshBulid.h"
 #pragma comment(lib,"D3D12.lib")
 #pragma comment(lib,"DXGI.lib")
 #pragma comment(lib,"d3dcompiler.lib")
@@ -159,6 +161,27 @@ void XDirectT::InitD3d()
 	CreateD3dview();
 	BulidPso();
 	
+}
+
+void XDirectT::BulidPso()
+{
+
+	if (FAILED(CommandList->Reset(CommandAlloctor.Get(), nullptr)))
+	{
+		return;
+	}
+
+	BulidCostantBuff();
+	initRootSingture();
+	BulidShader();
+	InitVertxIndex();
+	initPSO();
+	CommandList->Close();
+	ID3D12CommandList* cmdsLists[] = { CommandList.Get() };
+	mCommandqueue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
+
+	// Wait until initialization is complete.
+	FlushCommand();
 }
 
 void XDirectT::CreateRerousce()
@@ -344,62 +367,81 @@ void XDirectT::UpdateTime()
 	gameitimer.Tick();
 }
 
+
+
+void XDirectT::BulidCostantBuff()
+{
+
+	WorldtoviewbuffPtr = make_unique<UploadBuff<Matrix>>(d3ddevice, 1, true);
+	/*D3D12_GPU_VIRTUAL_ADDRESS dgva=WorldtoviewbuffPtr->Getresource()->GetGPUVirtualAddress();
+	D3D12_CONSTANT_BUFFER_VIEW_DESC dcbvd;
+
+	dcbvd.BufferLocation = dgva;
+	dcbvd.SizeInBytes = Calabuffer(sizeof(Matrix));
+	d3ddevice->CreateConstantBufferView(&dcbvd, mcbvheap->GetCPUDescriptorHandleForHeapStart());*/
+
+	WorldtoviewbuffPtr1 = make_unique<UploadBuff<Matrix1>>(d3ddevice, 1, true);
+
+
+
+}
+
+
+void XDirectT::initRootSingture()
+{
+
+	CD3DX12_ROOT_PARAMETER slotRootpa[2];
+	CD3DX12_DESCRIPTOR_RANGE cbvtable;
+	cbvtable.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 2, 0);
+	slotRootpa[0].InitAsConstantBufferView(0);
+	slotRootpa[1].InitAsConstantBufferView(1);
+	CD3DX12_ROOT_SIGNATURE_DESC rootsdesc(2, slotRootpa, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+	Microsoft::WRL::ComPtr<ID3DBlob> serializedRootSig = nullptr;
+	Microsoft::WRL::ComPtr<ID3DBlob> errorBlob=nullptr;
+	HRESULT hr= D3D12SerializeRootSignature(&rootsdesc, D3D_ROOT_SIGNATURE_VERSION_1, serializedRootSig.GetAddressOf(),errorBlob.GetAddressOf());
+
+	if (FAILED(d3ddevice->CreateRootSignature(0, serializedRootSig->GetBufferPointer(), serializedRootSig->GetBufferSize(), IID_PPV_ARGS(RootSignature.GetAddressOf()))))
+	{
+		return; 
+	}
+
+}
+
 void XDirectT::InitVertxIndex()
 {
-	XVertx4 vertxs[8] = {
-		XVertx4({ XMFLOAT3(-1.0f, -1.0f, -1.0f), XMFLOAT4(Colors::White) }),
-		XVertx4({ XMFLOAT3(-1.0f, +1.0f, -1.0f), XMFLOAT4(Colors::Black) }),
-		XVertx4({ XMFLOAT3(+1.0f, +1.0f, -1.0f), XMFLOAT4(Colors::Red) }),
-		XVertx4({ XMFLOAT3(+1.0f, -1.0f, -1.0f), XMFLOAT4(Colors::Green) }),
-		XVertx4({ XMFLOAT3(-1.0f, -1.0f, +1.0f), XMFLOAT4(Colors::Blue) }),
-		XVertx4({ XMFLOAT3(-1.0f, +1.0f, +1.0f), XMFLOAT4(Colors::Yellow) }),
-		XVertx4({ XMFLOAT3(+1.0f, +1.0f, +1.0f), XMFLOAT4(Colors::Cyan) }),
-		XVertx4({ XMFLOAT3(+1.0f, -1.0f, +1.0f), XMFLOAT4(Colors::Magenta) })
-		
+	
+	boxMesh = make_unique<StaticMesh>();
+
+	vector<XVertx4> vertxs;
+	vector<UINT16> index;
+	MeshBulid::GetMeshBulid()->CreateCyliner(3.0,3.0,50,8,8.0f, vertxs,index);
+
+	UINT bytesize = vertxs.size() * sizeof(XVertx4);
+	UINT inbytesize = index.size() * sizeof(UINT16);
+
+	boxMesh->indexcount = index.size();
+
+	D3d12Util::GetUtil()->GetDefaultBuff(CommandList, d3ddevice, boxMesh->UploadVertx, boxMesh->Vertxbuff, bytesize, vertxs.data());
+	D3d12Util::GetUtil()->GetDefaultBuff(CommandList, d3ddevice, boxMesh->UploadIndex, boxMesh->Indexbuff, inbytesize, index.data());
+	boxMesh->filename = "BOX";
+	boxMesh->ISizeInBytes = inbytesize;
+	boxMesh->VSizeInBytes = bytesize;
+	boxMesh->VStrideInBytes = sizeof(XVertx4);
+
+}
+
+void XDirectT::BulidShader()
+{
+	vsshader = ShaderCompile(L"D:\\XEngine\\XEngine\\Xone.hlsl", "VS", "vs_5_0");
+	psshafer = ShaderCompile(L"D:\\XEngine\\XEngine\\Xtwo.hlsl", "PS", "ps_5_0");
+
+	dinputeles =
+	{
+		{"POSITION",0,DXGI_FORMAT_R32G32B32_FLOAT,0,0,D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,0},
+		{"COLOR",0,DXGI_FORMAT_R32G32B32A32_FLOAT,0,12,D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,0},
 	};
 
-	const UINT64 bytesize = 8 * sizeof(XVertx4);
-	
-	
-	VertxGpuBuff = CreateDefaultBuff(bytesize, UploadGpuBuff, vertxs);
-	int width1= VertxGpuBuff->GetDesc().Width;
-	
-	//CommandList->IASetVertexBuffers(0, 1, &dvbv);
 
-	UINT16 index[] = 
-	{ 0, 1, 2,
-		0, 2, 3,
-
-		// back face
-		4, 6, 5,
-		4, 7, 6,
-
-		// left face
-		4, 5, 1,
-		4, 1, 0,
-
-		// right face
-		3, 2, 6,
-		3, 6, 7,
-
-		// top face
-		1, 5, 6,
-		1, 6, 2,
-
-		// bottom face
-		4, 0, 3,
-		4, 3, 7 };
-	const UINT16 inbytesize = 36*sizeof(UINT16);
-	
-	
-
-	indexbuff = CreateDefaultBuff(inbytesize, uploadinbuff,index);
-	int width2=indexbuff->GetDesc().Width;
-	width1 = VertxGpuBuff->GetDesc().Width;
-	//CommandList->IASetIndexBuffer(&dibv);
-
-
-	
 }
 
 void XDirectT::initPSO()
@@ -433,104 +475,51 @@ void XDirectT::initPSO()
 	dgpsd.SampleDesc.Quality = 0;
 	dgpsd.SampleMask = UINT_MAX;
 	dgpsd.VS = { reinterpret_cast<BYTE*>(vsshader->GetBufferPointer()),vsshader->GetBufferSize() };
-	dgpsd.PS = { reinterpret_cast<BYTE*>(psshafer->GetBufferPointer()),psshafer->GetBufferSize()};
-	
+	dgpsd.PS = { reinterpret_cast<BYTE*>(psshafer->GetBufferPointer()),psshafer->GetBufferSize() };
+
 	if (FAILED(d3ddevice->CreateGraphicsPipelineState(&dgpsd, IID_PPV_ARGS(mpso.GetAddressOf()))))
 	{
 		return;
 	}
 }
 
-void XDirectT::BulidShader()
+
+
+void XDirectT::Update()
 {
-	vsshader = ShaderCompile(L"D:\\XEngine\\XEngine\\Xone.hlsl", "VS", "vs_5_0");
-	psshafer = ShaderCompile(L"D:\\XEngine\\XEngine\\Xtwo.hlsl", "PS", "ps_5_0");
+	float x = 10 * sinf(mPhi)*cosf(mTheta);
+	float y = 10 * sinf(mPhi)*sinf(mTheta);
+	float z = 10 * cosf(mPhi);
 
-	dinputeles =
-	{
-		{"POSITION",0,DXGI_FORMAT_R32G32B32_FLOAT,0,0,D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,0},
-		{"COLOR",0,DXGI_FORMAT_R32G32B32A32_FLOAT,0,12,D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,0},
-	};
+	XMMATRIX P = XMMatrixPerspectiveFovLH(0.25f*3.1415926535f, 1280.f / 720.f, 1.0f, 1000.0f);
+	XMStoreFloat4x4(&mProj, P);
+	// Build the view matrix.
+	XMVECTOR pos = XMVectorSet(x, y, z, 1.0f);
+	XMVECTOR target = XMVectorZero();
+	XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 
+	XMMATRIX view = XMMatrixLookAtLH(pos, target, up);
+	XMStoreFloat4x4(&mView, view);
 
+	XMMATRIX world = XMLoadFloat4x4(&mWorld);
+	XMMATRIX proj = XMLoadFloat4x4(&mProj);
+	XMMATRIX worldViewProj = world * view*proj;
+	//XMMATRIX worldViewProj = world;
+
+	// Update the constant buffer with the latest worldViewProj matrix.
+	Matrix objConstants;
+	XMStoreFloat4x4(&objConstants.WorldtoviewMatrix, XMMatrixTranspose(worldViewProj));
+	Matrix1 objConstants1;
+	objConstants1.ftest = 2.0f;
+	objConstants1.gtest = 1.0f;
+	WorldtoviewbuffPtr->CopyData(0, objConstants);
+	WorldtoviewbuffPtr1->CopyData(0, objConstants1);
 }
 
-void XDirectT::CreateCbuff()
-{
-
-}
-
-void XDirectT::initRootSingture()
-{
-
-	CD3DX12_ROOT_PARAMETER slotRootpa[2];
-	CD3DX12_DESCRIPTOR_RANGE cbvtable;
-	cbvtable.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 2, 0);
-	slotRootpa[0].InitAsConstantBufferView(0);
-	slotRootpa[1].InitAsConstantBufferView(1);
-	CD3DX12_ROOT_SIGNATURE_DESC rootsdesc(2, slotRootpa, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
-	Microsoft::WRL::ComPtr<ID3DBlob> serializedRootSig = nullptr;
-	Microsoft::WRL::ComPtr<ID3DBlob> errorBlob=nullptr;
-	HRESULT hr= D3D12SerializeRootSignature(&rootsdesc, D3D_ROOT_SIGNATURE_VERSION_1, serializedRootSig.GetAddressOf(),errorBlob.GetAddressOf());
-
-	if (FAILED(d3ddevice->CreateRootSignature(0, serializedRootSig->GetBufferPointer(), serializedRootSig->GetBufferSize(), IID_PPV_ARGS(RootSignature.GetAddressOf()))))
-	{
-		return; 
-	}
-
-}
-
-void XDirectT::BulidPso()
-{
-
-	if (FAILED(CommandList->Reset(CommandAlloctor.Get(), nullptr)))
-	{
-		return;
-	}
-
-	BulidCostantBuff();
-	initRootSingture();
-	BulidShader();
-	InitVertxIndex();
-	initPSO();
-	CommandList->Close();
-	ID3D12CommandList* cmdsLists[] = { CommandList.Get() };
-	mCommandqueue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
-
-	// Wait until initialization is complete.
-	FlushCommand();
-}
-
-void XDirectT::BulidCostantBuff()
-{
-
-	WorldtoviewbuffPtr = make_unique<UploadBuff<Matrix>>(d3ddevice,1,true);
-	/*D3D12_GPU_VIRTUAL_ADDRESS dgva=WorldtoviewbuffPtr->Getresource()->GetGPUVirtualAddress();
-	D3D12_CONSTANT_BUFFER_VIEW_DESC dcbvd;
-	
-	dcbvd.BufferLocation = dgva;
-	dcbvd.SizeInBytes = Calabuffer(sizeof(Matrix));
-	d3ddevice->CreateConstantBufferView(&dcbvd, mcbvheap->GetCPUDescriptorHandleForHeapStart());*/
-
-	WorldtoviewbuffPtr1 = make_unique<UploadBuff<Matrix1>>(d3ddevice, 1, true);
-
-	
-
-}
 
 void XDirectT::Draw()
 {
-	D3D12_VERTEX_BUFFER_VIEW dvbv;
-	dvbv.BufferLocation = VertxGpuBuff->GetGPUVirtualAddress();
-	dvbv.StrideInBytes = sizeof(XVertx4);
-	dvbv.SizeInBytes = 8* sizeof(XVertx4);
-
-	int width1 = VertxGpuBuff->GetDesc().Width;
-
-	D3D12_INDEX_BUFFER_VIEW dibv;
-	dibv.BufferLocation = indexbuff->GetGPUVirtualAddress();
-	dibv.SizeInBytes = 36 * sizeof(UINT16);
-	dibv.Format = DXGI_FORMAT_R16_UINT;
+	
 
 
 	if (FAILED(CommandAlloctor->Reset()))
@@ -557,13 +546,12 @@ void XDirectT::Draw()
 	CommandList->SetDescriptorHeaps(_countof(descriptorheap), descriptorheap);*/
 
 	CommandList->SetGraphicsRootSignature(RootSignature.Get());
-	CommandList->IASetVertexBuffers(0, 1, &dvbv);
-	CommandList->IASetIndexBuffer(&dibv);
+	CommandList->IASetVertexBuffers(0, 1, &boxMesh->getVertxView());
+	CommandList->IASetIndexBuffer(&boxMesh->GetIndexView());
 	CommandList->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	CommandList->SetGraphicsRootConstantBufferView(0, WorldtoviewbuffPtr->Getresource()->GetGPUVirtualAddress());
 	CommandList->SetGraphicsRootConstantBufferView(1, WorldtoviewbuffPtr1->Getresource()->GetGPUVirtualAddress());
-	CommandList->DrawIndexedInstanced(36, 1, 0, 0, 0);
-
+	CommandList->DrawIndexedInstanced( boxMesh->indexcount, 1, 0, 0, 0);
 	CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(SwpainChianBuff[CurrentBuffnum].Get(),
 		D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
 
@@ -580,36 +568,7 @@ void XDirectT::Draw()
 
 }
 
-void XDirectT::Update()
-{
-	float x = mRadius * sinf(mPhi)*cosf(mTheta);
-	float z = mRadius * sinf(mPhi)*sinf(mTheta);
-	float y = mRadius * cosf(mPhi);
 
-	XMMATRIX P = XMMatrixPerspectiveFovLH(0.25f*3.1415926535f, 1280.f/720.f, 1.0f, 1000.0f);
-	XMStoreFloat4x4(&mProj, P);
-	// Build the view matrix.
-	XMVECTOR pos = XMVectorSet(x, y, z, 1.0f);
-	XMVECTOR target = XMVectorZero();
-	XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
-
-	XMMATRIX view = XMMatrixLookAtLH(pos, target, up);
-	XMStoreFloat4x4(&mView, view);
-
-	XMMATRIX world = XMLoadFloat4x4(&mWorld);
-	XMMATRIX proj = XMLoadFloat4x4(&mProj);
-	XMMATRIX worldViewProj = world * view*proj;
-	//XMMATRIX worldViewProj = world;
-
-	// Update the constant buffer with the latest worldViewProj matrix.
-	Matrix objConstants;
-	XMStoreFloat4x4(&objConstants.WorldtoviewMatrix, XMMatrixTranspose(worldViewProj));
-	Matrix1 objConstants1;
-	objConstants1.ftest = 2.0f;
-	objConstants1.gtest = 1.0f;
-	WorldtoviewbuffPtr->CopyData(0, objConstants);
-	WorldtoviewbuffPtr1->CopyData(0, objConstants1);
-}
 
 Microsoft::WRL::ComPtr<ID3DBlob> XDirectT::ShaderCompile(const wstring &filename,const string &pdefine,const string &ptarget)
 {
@@ -635,63 +594,3 @@ Microsoft::WRL::ComPtr<ID3DBlob> XDirectT::ShaderCompile(const wstring &filename
 
 }
 
-Microsoft::WRL::ComPtr<ID3D12Resource> XDirectT::CreateDefaultBuff(UINT64 bytesize, Microsoft::WRL::ComPtr<ID3D12Resource>& uploadbufff,void* initData)
-{
-
-
-
-	
-	Microsoft::WRL::ComPtr<ID3D12Resource> Default;
-	D3D12_HEAP_PROPERTIES dhp;
-	dhp.Type = D3D12_HEAP_TYPE_DEFAULT;
-	dhp.VisibleNodeMask = 1;
-	dhp.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
-	dhp.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
-	dhp.CreationNodeMask = 1;
-	D3D12_RESOURCE_DESC drd;
-	drd.Alignment = 0;
-	drd.DepthOrArraySize = 1;
-	drd.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-	drd.Flags = D3D12_RESOURCE_FLAG_NONE;
-	drd.Format = DXGI_FORMAT_UNKNOWN;
-	drd.Height = 1;
-	drd.Width = bytesize;
-	drd.MipLevels = 1;
-	drd.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
-	drd.SampleDesc.Count = 1;
-	drd.SampleDesc.Quality = 0;
-
-	if (FAILED(d3ddevice->CreateCommittedResource(&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT), D3D12_HEAP_FLAG_NONE,&CD3DX12_RESOURCE_DESC::Buffer(bytesize), D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(Default.GetAddressOf()))))
-	{
-		return NULL;
-	}
-	D3D12_HEAP_PROPERTIES dhpd;
-	dhpd.Type = D3D12_HEAP_TYPE_UPLOAD;
-	dhpd.VisibleNodeMask = 1;
-	dhpd.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
-	dhpd.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
-	dhpd.CreationNodeMask = 1;
-	if (FAILED(d3ddevice->CreateCommittedResource(&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD), D3D12_HEAP_FLAG_NONE, &CD3DX12_RESOURCE_DESC::Buffer(bytesize), D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(uploadbufff.GetAddressOf()))))
-	{
-		return NULL;
-	}
-	D3D12_RESOURCE_BARRIER brd;
-	brd.Transition.StateBefore = D3D12_RESOURCE_STATE_COMMON;
-	brd.Transition.StateAfter = D3D12_RESOURCE_STATE_COPY_DEST;
-	brd.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-	brd.Transition.pResource = Default.Get();
-	brd.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-	brd.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-
-	D3D12_SUBRESOURCE_DATA subreourceData = {};
-	subreourceData.pData = initData;
-	subreourceData.RowPitch = bytesize;
-	subreourceData.SlicePitch = subreourceData.RowPitch;
-	CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(Default.Get(),
-		D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_DEST));
-	UpdateSubresources<1>(CommandList.Get(), Default.Get(), uploadbufff.Get(), 0, 0, 1, &subreourceData);
-	CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(Default.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_GENERIC_READ));
-	return Default;
-	
-	
-}

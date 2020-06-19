@@ -16,6 +16,9 @@
     <Filter Include="shader">
       <UniqueIdentifier>{29df5d85-c2bf-48e1-b72f-23ee53d4fc9f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Mesh">
+      <UniqueIdentifier>{41caf849-6634-460e-adec-1cd9bfcb2d67}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="XWindow.h">
@@ -39,6 +42,9 @@
     <ClInclude Include="StaticMesh.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="MeshBulid.h">
+      <Filter>Mesh</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="XWindow.cpp">
@@ -58,6 +64,9 @@
     </ClCompile>
     <ClCompile Include="StaticMesh.cpp">
       <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="MeshBulid.cpp">
+      <Filter>Mesh</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
