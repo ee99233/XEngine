@@ -3,19 +3,23 @@
 #include <wrl.h>
 #include "XD3dUtil.h"
 #include <memory>
+#include "XMath.h"
+using namespace XMath;
 using namespace std;
 using namespace Microsoft::WRL;
 class FrameResource
 {
-	FrameResource(const ComPtr<ID3D12Device>& d3device);
+public:
+	FrameResource(ComPtr<ID3D12Device>& d3device);
 	~FrameResource();
 
-	unique_ptr< UploadBuff<struct Matrix1>>  objmatrixa;
-	unique_ptr < UploadBuff<struct Matrix>> objmatrix;
-
-private:
-	UINT fense;
+	unique_ptr< UploadBuff< Matrix1>>  objmatrixa;
+	unique_ptr <UploadBuff< Matrix>> objmatrix;
+	UINT64 fense;
 	Microsoft::WRL::ComPtr<ID3D12CommandAllocator> commandallocator;
+private:
+	
+	
 
 	
 };

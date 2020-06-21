@@ -6,6 +6,7 @@
 #include <DirectXColors.h>
 #include "XD3dUtil.h"
 #include "MeshBulid.h"
+#include "FrameResource.h"
 #pragma comment(lib,"D3D12.lib")
 #pragma comment(lib,"DXGI.lib")
 #pragma comment(lib,"d3dcompiler.lib")
@@ -123,6 +124,9 @@ void XDirectT::InitD3d()
 		{
 			return;
 		}
+		
+	
+		
 		debugcontrol->EnableDebugLayer();
 	}
 #endif
@@ -182,6 +186,7 @@ void XDirectT::BulidPso()
 
 	// Wait until initialization is complete.
 	FlushCommand();
+	//CommandAlloctor->Release();
 }
 
 void XDirectT::CreateRerousce()
@@ -382,6 +387,12 @@ void XDirectT::BulidCostantBuff()
 
 	WorldtoviewbuffPtr1 = make_unique<UploadBuff<Matrix1>>(d3ddevice, 1, true);
 
+	for (int i = 0; i < 3; ++i)
+	{
+		
+		frameResource[i] = make_unique<FrameResource >(d3ddevice);
+		CurrentBuffnum = 0;
+	}
 
 
 }
@@ -512,8 +523,25 @@ void XDirectT::Update()
 	Matrix1 objConstants1;
 	objConstants1.ftest = 2.0f;
 	objConstants1.gtest = 1.0f;
-	WorldtoviewbuffPtr->CopyData(0, objConstants);
-	WorldtoviewbuffPtr1->CopyData(0, objConstants1);
+	
+	framresourcenum = framresourcenum%3;
+	currentframeresource = frameResource[framresourcenum].get();
+
+	if (currentframeresource->fense != 0 && commandfence->GetCompletedValue() < currentframeresource->fense)
+	{
+		HANDLE eventhandel = CreateEventEx(nullptr, false, false, EVENT_ALL_ACCESS);
+		if (FAILED(commandfence->SetEventOnCompletion(FenseCount, eventhandel)))
+		{
+			return;
+		}
+		WaitForSingleObject(eventhandel, INFINITE);
+		CloseHandle(eventhandel);
+
+	}
+
+
+	currentframeresource->objmatrix->CopyData(0, objConstants);
+	currentframeresource->objmatrixa->CopyData(0, objConstants1);
 }
 
 
@@ -521,13 +549,14 @@ void XDirectT::Draw()
 {
 	
 
+	 
 
-	if (FAILED(CommandAlloctor->Reset()))
+	if (FAILED(currentframeresource->commandallocator->Reset()))
 	{
 		return;
 	}
 
-	if (FAILED(CommandList->Reset(CommandAlloctor.Get(), mpso.Get())))
+	if (FAILED(CommandList->Reset(currentframeresource->commandallocator.Get(), mpso.Get())))
 	{
 		return;
 	}
@@ -549,9 +578,9 @@ void XDirectT::Draw()
 	CommandList->IASetVertexBuffers(0, 1, &boxMesh->getVertxView());
 	CommandList->IASetIndexBuffer(&boxMesh->GetIndexView());
 	CommandList->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	CommandList->SetGraphicsRootConstantBufferView(0, WorldtoviewbuffPtr->Getresource()->GetGPUVirtualAddress());
-	CommandList->SetGraphicsRootConstantBufferView(1, WorldtoviewbuffPtr1->Getresource()->GetGPUVirtualAddress());
-	CommandList->DrawIndexedInstanced( boxMesh->indexcount, 1, 0, 0, 0);
+	CommandList->SetGraphicsRootConstantBufferView(0, currentframeresource->objmatrix->Getresource()->GetGPUVirtualAddress());
+	CommandList->SetGraphicsRootConstantBufferView(1, currentframeresource->objmatrixa->Getresource()->GetGPUVirtualAddress());
+	CommandList->DrawIndexedInstanced(boxMesh->indexcount, 1, 0, 0, 0);
 	CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(SwpainChianBuff[CurrentBuffnum].Get(),
 		D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
 
@@ -559,11 +588,19 @@ void XDirectT::Draw()
 
 	ID3D12CommandList* cmdlists[] = { CommandList.Get() };
 	mCommandqueue->ExecuteCommandLists(_countof(cmdlists), cmdlists);
-	
-	HRESULT hr= swapchain->Present(0, 0);
-	
+
+
+	HRESULT hr = swapchain->Present(0, 0);
+	if (FAILED(hr))
+	{
+		return;
+	}
 	CurrentBuffnum = (CurrentBuffnum + 1) % 2;
-	FlushCommand();
+	currentframeresource->fense = ++FenseCount;
+	++framresourcenum;
+	mCommandqueue->Signal(commandfence.Get(), FenseCount);
+	
+	//FlushCommand();
 
 
 }

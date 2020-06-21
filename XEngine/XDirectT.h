@@ -11,6 +11,7 @@
 #include <array>
 #include "XMath.h"
 #include "StaticMesh.h"
+#include "FrameResource.h"
 using namespace std;
 using namespace XMath;
 class XDirectT
@@ -73,8 +74,8 @@ public:
 	D3D12_VIEWPORT mScreenViewport;
 	D3D12_RECT mScissorRect;
 
-	unique_ptr<UploadBuff<struct Matrix>> WorldtoviewbuffPtr;
-	unique_ptr<UploadBuff<struct Matrix1>> WorldtoviewbuffPtr1;
+	unique_ptr<UploadBuff< Matrix>> WorldtoviewbuffPtr;
+	unique_ptr<UploadBuff< Matrix1>> WorldtoviewbuffPtr1;
 
 	
 	XMFLOAT4X4 mWorld = Identity4x4();
@@ -91,6 +92,10 @@ public:
 	Microsoft::WRL::ComPtr<ID3D12Resource> UploadGpuBuff;
 
 	unique_ptr<StaticMesh> boxMesh;
+
+	unique_ptr<FrameResource> frameResource[3];
+	UINT16 framresourcenum;
+	FrameResource* currentframeresource;
 
 };
 
