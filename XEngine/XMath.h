@@ -51,5 +51,10 @@ namespace XMath
 		float ftest = 1.0f;
 	};
 
+	inline float HillHight(const float &x, const float &y) 
+	{
 
+		return 0.3f*(y*sinf(0.1f*x) + x * cosf(y*0.1f));
+
+	}
 }

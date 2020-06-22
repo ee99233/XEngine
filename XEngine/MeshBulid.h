@@ -12,6 +12,7 @@ public:
 	static MeshBulid* GetMeshBulid();
 	
 	void CreateCyliner(float topr, float bottomr, UINT xrcount, UINT statckcount, float High, OUT vector<XVertx4> & vertxs,OUT vector<UINT16>& indess);
+	void CreateGrid(UINT width, UINT height,UINT m,UINT n,OUT vector<XVertx4> &invertxs,OUT vector<UINT16>& inindex);
 private:
 	static MeshBulid* meshbulid;
 

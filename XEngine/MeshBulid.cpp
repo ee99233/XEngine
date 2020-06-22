@@ -111,5 +111,43 @@ void MeshBulid::CreateCyliner(float topr, float bottomr, UINT xrcount, UINT stat
 	
 }
 
+void MeshBulid::CreateGrid(UINT width, UINT height, UINT m, UINT n, OUT vector<XVertx4> &invertxs, OUT vector<UINT16>& inindex)
+{
+
+	float dx = (float)width / (float)(m);
+	float dy = (float)height / float(n);
+	float centerx = (float)width * -0.5f;
+	float centery = (float)height * -0.5f;
+	for (int j = 0; j < n; ++j)
+	{
+		for (int i = 0; i < m; ++i)
+		{
+
+			float x = centerx + dx * i;
+			float y = centery + dy * j;
+			float z = 2.0f;
+			invertxs.push_back(std::move(XVertx4({ XMFLOAT3(x, y, z), XMFLOAT4(Colors::Cyan)})));
+		}
+	}
+
+	for (int j = n - 1; j > 0; --j)
+	{
+		for (int i = 0; i < m - 1;++i)
+		{
+			inindex.push_back(j*m + i);
+			inindex.push_back((j - 1)*m + i);
+			inindex.push_back((j-1)*m+i+1);
+
+			inindex.push_back(j*m + i);
+			inindex.push_back((j - 1)*m + i + 1);
+			inindex.push_back(j*m+i+1);
+
+		}
+	}
+
+
+
+}
+
 MeshBulid* MeshBulid::meshbulid=nullptr;
 

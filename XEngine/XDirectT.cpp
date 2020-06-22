@@ -425,10 +425,39 @@ void XDirectT::InitVertxIndex()
 
 	vector<XVertx4> vertxs;
 	vector<UINT16> index;
-	MeshBulid::GetMeshBulid()->CreateCyliner(3.0,3.0,50,8,8.0f, vertxs,index);
+	MeshBulid::GetMeshBulid()->CreateGrid(50,50,10,10, vertxs,index);
 
 	UINT bytesize = vertxs.size() * sizeof(XVertx4);
 	UINT inbytesize = index.size() * sizeof(UINT16);
+
+
+	for (int i = 0; i < vertxs.size(); ++i)
+	{
+		float z = HillHight(vertxs[i].Pos.x, vertxs[i].Pos.y);
+		vertxs[i].Pos.z = z;
+		if (vertxs[i].Pos.z < -10.f)
+		{
+			vertxs[i].Color = XMFLOAT4(1.0f, 0.96f, 0.62f, 1.0f);
+
+		}
+		else if (vertxs[i].Pos.z < 5.0f)
+		{
+			vertxs[i].Color = XMFLOAT4(0.48f,0.77f,0.46f,1.0f);
+		}
+		else if (vertxs[i].Pos.z<12.0f)
+		{
+			vertxs[i].Color = XMFLOAT4(0.1f,0.48f,0.19f,1.0f);
+		}
+		else if (vertxs[i].Pos.z<20.0f)
+		{
+			vertxs[i].Color = XMFLOAT4(0.45f,0.39f,0.34f,1.0f);
+		}
+		else
+		{
+			vertxs[i].Color = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+		}
+
+	}
 
 	boxMesh->indexcount = index.size();
 
@@ -498,9 +527,9 @@ void XDirectT::initPSO()
 
 void XDirectT::Update()
 {
-	float x = 10 * sinf(mPhi)*cosf(mTheta);
-	float y = 10 * sinf(mPhi)*sinf(mTheta);
-	float z = 10 * cosf(mPhi);
+	float x = 20 * sinf(mPhi)*cosf(mTheta);
+	float y = 20 * sinf(mPhi)*sinf(mTheta);
+	float z = 20 * cosf(mPhi);
 
 	XMMATRIX P = XMMatrixPerspectiveFovLH(0.25f*3.1415926535f, 1280.f / 720.f, 1.0f, 1000.0f);
 	XMStoreFloat4x4(&mProj, P);
