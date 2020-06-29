@@ -3,16 +3,22 @@
 //
 // Transforms and colors geometry.
 //***************************************************************************************
-
+#include "Light.hlsl"
 cbuffer cbPerObject : register(b0)
 {
 	float4x4 gWorldViewProj; 
+};
+
+cbuffer cbLight : register(b1)
+{
+    Light light[16];
 };
 
 struct VertexIn
 {
 	float3 PosL  : POSITION;
     float4 Color : COLOR;
+    
 };
 
 struct VertexOut

@@ -8,6 +8,7 @@ cbuffer cbtest: register(b1)
 {
     float gtest;
     float ftest;
+    
 }
 
 

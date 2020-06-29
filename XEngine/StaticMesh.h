@@ -3,6 +3,17 @@
 #include <wrl.h>
 #include <string>
 using std::string;
+struct XMaterail
+{
+	float Rougress;
+	XMFLOAT4 BaseColor;
+	XMFLOAT3 Norml;
+	XMFLOAT4 Essmissor;
+
+
+};
+
+
 class StaticMesh
 {
 public:
