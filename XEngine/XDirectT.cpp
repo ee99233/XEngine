@@ -164,8 +164,9 @@ void XDirectT::InitD3d()
 	CreateSwapchain();
 	CreateD3dview();
 	BulidPso();
-	
+	initpbr();
 }
+
 
 void XDirectT::BulidPso()
 {
@@ -187,6 +188,30 @@ void XDirectT::BulidPso()
 	// Wait until initialization is complete.
 	FlushCommand();
 	//CommandAlloctor->Release();
+}
+
+
+
+void XDirectT::initpbr()
+{
+	objConstants1.light[0].LightColor = XMFLOAT3(1.0f, 1.0f, 1.0f);
+	objConstants1.light[0].LightPos = XMFLOAT3(30.f, 30.f, -30.f);
+	objConstants1.light[1].LightColor = XMFLOAT3(0.3f, 0.2f, 0.1f);
+	objConstants1.light[1].LightPos = XMFLOAT3(32.f, 12.f, -14.f);
+	objConstants1.light[2].LightColor = XMFLOAT3(0.23f, 0.33f, 0.11f);
+	objConstants1.light[2].LightPos = XMFLOAT3(2.f, 10.f, -14.f);
+
+	objConstants1.mat.BaseColor = XMFLOAT3(1.0f, 0, 0);
+	objConstants1.mat.metallic = 0.2;
+	objConstants1.mat.Rougress = 0.3;
+	objConstants1.ao = 0.2;
+	objConstants1.albedo = 0.3;
+	objConstants1.gworld._11 = 1.0f;
+	objConstants1.gworld._22 = 1.0f;
+	objConstants1.gworld._33 = 1.0f;
+	objConstants1.gworld._44 = 1.0f;
+
+
 }
 
 void XDirectT::CreateRerousce()
@@ -425,39 +450,39 @@ void XDirectT::InitVertxIndex()
 
 	vector<XVertx4> vertxs;
 	vector<UINT16> index;
-	MeshBulid::GetMeshBulid()->CreateGrid(50,50,10,10, vertxs,index);
+	MeshBulid::GetMeshBulid()->CreateSphere(10,20,20, vertxs,index);
 
 	UINT bytesize = vertxs.size() * sizeof(XVertx4);
 	UINT inbytesize = index.size() * sizeof(UINT16);
 
 
-	for (int i = 0; i < vertxs.size(); ++i)
-	{
-		float z = HillHight(vertxs[i].Pos.x, vertxs[i].Pos.y);
-		vertxs[i].Pos.z = z;
-		if (vertxs[i].Pos.z < -10.f)
-		{
-			vertxs[i].Color = XMFLOAT4(1.0f, 0.96f, 0.62f, 1.0f);
+	//for (int i = 0; i < vertxs.size(); ++i)
+	//{
+	//	float z = HillHight(vertxs[i].Pos.x, vertxs[i].Pos.y);
+	//	vertxs[i].Pos.z = z;
+	//	if (vertxs[i].Pos.z < -10.f)
+	//	{
+	//		vertxs[i].Color = XMFLOAT4(1.0f, 0.96f, 0.62f, 1.0f);
 
-		}
-		else if (vertxs[i].Pos.z < 5.0f)
-		{
-			vertxs[i].Color = XMFLOAT4(0.48f,0.77f,0.46f,1.0f);
-		}
-		else if (vertxs[i].Pos.z<12.0f)
-		{
-			vertxs[i].Color = XMFLOAT4(0.1f,0.48f,0.19f,1.0f);
-		}
-		else if (vertxs[i].Pos.z<20.0f)
-		{
-			vertxs[i].Color = XMFLOAT4(0.45f,0.39f,0.34f,1.0f);
-		}
-		else
-		{
-			vertxs[i].Color = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
-		}
+	//	}
+	//	else if (vertxs[i].Pos.z < 5.0f)
+	//	{
+	//		vertxs[i].Color = XMFLOAT4(0.48f,0.77f,0.46f,1.0f);
+	//	}
+	//	else if (vertxs[i].Pos.z<12.0f)
+	//	{
+	//		vertxs[i].Color = XMFLOAT4(0.1f,0.48f,0.19f,1.0f);
+	//	}
+	//	else if (vertxs[i].Pos.z<20.0f)
+	//	{
+	//		vertxs[i].Color = XMFLOAT4(0.45f,0.39f,0.34f,1.0f);
+	//	}
+	//	else
+	//	{
+	//		vertxs[i].Color = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+	//	}
 
-	}
+	//}
 
 	boxMesh->indexcount = index.size();
 
@@ -467,18 +492,22 @@ void XDirectT::InitVertxIndex()
 	boxMesh->ISizeInBytes = inbytesize;
 	boxMesh->VSizeInBytes = bytesize;
 	boxMesh->VStrideInBytes = sizeof(XVertx4);
+	boxMesh->xmat.BaseColor = XMFLOAT3(0.2, 0.2, 0.2);
+	boxMesh->xmat.metallic = 0.2;
+	boxMesh->xmat.Rougress = 0.5;
 
 }
 
 void XDirectT::BulidShader()
 {
 	vsshader = ShaderCompile(L"D:\\XEngine\\XEngine\\Xone.hlsl", "VS", "vs_5_0");
-	psshafer = ShaderCompile(L"D:\\XEngine\\XEngine\\Xtwo.hlsl", "PS", "ps_5_0");
+	psshafer = ShaderCompile(L"D:\\XEngine\\XEngine\\Xone.hlsl", "PS", "ps_5_0");
 
 	dinputeles =
 	{
 		{"POSITION",0,DXGI_FORMAT_R32G32B32_FLOAT,0,0,D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,0},
 		{"COLOR",0,DXGI_FORMAT_R32G32B32A32_FLOAT,0,12,D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,0},
+		{"NORMAL",0,DXGI_FORMAT_R32G32B32_FLOAT,0,28,D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,0},
 	};
 
 
@@ -549,9 +578,8 @@ void XDirectT::Update()
 	// Update the constant buffer with the latest worldViewProj matrix.
 	Matrix objConstants;
 	XMStoreFloat4x4(&objConstants.WorldtoviewMatrix, XMMatrixTranspose(worldViewProj));
-	Matrix1 objConstants1;
-	objConstants1.ftest = 2.0f;
-	objConstants1.gtest = 1.0f;
+	
+	objConstants1.Campos = XMFLOAT3(x, y, z);
 	
 	framresourcenum = framresourcenum%3;
 	currentframeresource = frameResource[framresourcenum].get();

@@ -2,14 +2,16 @@
 #include <d3d12.h>
 #include <wrl.h>
 #include <string>
+#include <DirectXMath.h>
+using namespace DirectX;
 using std::string;
 
 struct XMaterail
 {
+	XMFLOAT3 BaseColor;
 	float Rougress;
-	XMFLOAT4 BaseColor;
 	XMFLOAT3 Norml;
-	XMFLOAT4 Essmissor;
+	float metallic;
 };
 
 
@@ -33,6 +35,7 @@ public:
 	UINT VStrideInBytes;
 	UINT ISizeInBytes;
 	UINT indexcount;
+	XMaterail xmat;
 private:
 	
 

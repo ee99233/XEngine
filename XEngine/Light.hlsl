@@ -1,12 +1,14 @@
 struct Xmartail
 {
-    float3 Norml;
-    float Rougress;
     float3 BaseColor;
-    float metallic; 
+    float Rougress;
+    float3 Norml;
+    float metallic;
 };
 struct Light
 {
-    float3 LightColor;
     float3 LoghtPos;
+    float x;
+    float3 LightColor;
+    float y;
 };

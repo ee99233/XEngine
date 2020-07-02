@@ -11,6 +11,7 @@
 #include <array>
 #include "XMath.h"
 #include "StaticMesh.h"
+#include "Light.h"
 #include "FrameResource.h"
 using namespace std;
 using namespace XMath;
@@ -35,6 +36,7 @@ public:
 	void BulidShader();
 	void initRootSingture();
 	void BulidPso();
+	void initpbr();
 	void BulidCostantBuff();
 	void Draw();
 	void Update();
@@ -96,6 +98,6 @@ public:
 	unique_ptr<FrameResource> frameResource[3];
 	UINT16 framresourcenum;
 	FrameResource* currentframeresource;
-
+	Matrix1 objConstants1;
 };
 

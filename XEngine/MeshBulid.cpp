@@ -1,9 +1,8 @@
 #include "MeshBulid.h"
 #include <corecrt_math.h>
 #include <DirectXColors.h>
-
 #define PI 3.1415926
-
+using namespace DirectX;
 MeshBulid::MeshBulid()
 {
 
@@ -145,6 +144,91 @@ void MeshBulid::CreateGrid(UINT width, UINT height, UINT m, UINT n, OUT vector<X
 		}
 	}
 
+
+
+}
+
+void MeshBulid::CreateSphere(UINT r, UINT m, UINT n, OUT vector<XVertx4> &invertxs, OUT vector<UINT16>& inindex)
+{
+
+	float dphi = PI / n;
+	float dth = 2 * PI / m;
+
+	for (int h = 1;h< n; ++h)
+	{
+ 		float phi = PI-dphi * h;
+		float sinr = sinf(phi)*r;
+		for (int j = 0; j <= m; ++j)
+		{
+			float th = dth * j;
+			float x = cosf(th) * sinr;
+			float y = sinf(th)*sinr;
+			float z = cosf(phi)*r;
+			invertxs.push_back(std::move(XVertx4({ XMFLOAT3(x, y, z), XMFLOAT4(Colors::Cyan) }))); 
+		}
+	}
+	int rcount = m + 1;
+	for (int h = 0; h < n-2; ++h)
+	{
+		for (int i = 0; i < m; ++i)
+		{
+			inindex.push_back(h*(rcount)+i);
+			inindex.push_back((h+1)*rcount+i);
+			inindex.push_back((h+1)*rcount+i+1);
+
+
+			inindex.push_back(h*rcount+i);
+			inindex.push_back((h+1)*rcount+i+1);
+			inindex.push_back(h*rcount+i+1);
+
+		}
+
+	}
+	float xr = r;
+
+
+	
+
+	invertxs.push_back(std::move(XVertx4({ XMFLOAT3(0, 0, -xr), XMFLOAT4(Colors::Cyan) })));
+	invertxs.push_back(std::move(XVertx4({ XMFLOAT3(0, 0, xr), XMFLOAT4(Colors::Cyan) })));
+
+
+	int index = invertxs.size();
+	for (int i = 0; i <= m; ++i)
+	{
+		inindex.push_back(i);
+		inindex.push_back(i + 1);
+		inindex.push_back(index - 2);
+		inindex.push_back((n - 2)*rcount + i);
+		inindex.push_back((n - 2)*rcount+ i + 1);
+		inindex.push_back(index - 1);
+	}
+
+	UINT Trinum = inindex.size() / 3;
+
+	for (int i = 0; i < Trinum; i += 3)
+	{
+		XMFLOAT3 p1 = invertxs[inindex[i]].Pos;
+		XMFLOAT3 p2 = invertxs[inindex[i+1]].Pos;
+		XMFLOAT3 p3 = invertxs[inindex[i + 2]].Pos;
+
+		XMFLOAT3 v1(p2.x - p1.x, p2.y - p1.y, p2.z - p1.z);
+		XMFLOAT3 v2(p3.x - p1.x, p3.y - p1.y, p3.z - p1.z);
+
+		XMFLOAT3 n = CrossTS(v2, v1);
+
+		invertxs[inindex[i]].Normal.x += n.x;
+		invertxs[inindex[i]].Normal.y += n.y;
+		invertxs[inindex[i]].Normal.z += n.z;
+
+		invertxs[inindex[i+1]].Normal.x += n.x;
+		invertxs[inindex[i+1]].Normal.y += n.y;
+		invertxs[inindex[i+1]].Normal.z += n.z;
+
+		invertxs[inindex[i+2]].Normal.x += n.x;
+		invertxs[inindex[i+2]].Normal.y += n.y;
+		invertxs[inindex[i+2]].Normal.z += n.z;
+	}
 
 
 }
