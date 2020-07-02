@@ -1,5 +1,6 @@
 #include "XWindow.h"
 #include "XDirectT.h"
+#include <WindowsX.h>
 UINT16  XWindow::Width=1280;
 UINT16  XWindow::Height=720;
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
@@ -19,6 +20,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 			}
 		return 0;
 		}
+	case WM_MOUSEMOVE:
+		XDirectT::Getdirectx()->OnMouseMove(wparam, GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam));
+		return 0;
 	case WM_DESTROY:
 		PostQuitMessage(0);
 		return 0;

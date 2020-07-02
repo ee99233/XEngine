@@ -40,6 +40,7 @@ public:
 	void BulidCostantBuff();
 	void Draw();
 	void Update();
+	void  OnMouseMove(WPARAM btnState, int x, int y);
 	Microsoft::WRL::ComPtr<ID3DBlob> ShaderCompile(const  wstring &filename, const  string &pdefine, const   string &ptarget);
 	static XDirectT* xdirectx;
 	Microsoft::WRL::ComPtr<IDXGIFactory4> dxfactory;
@@ -99,5 +100,6 @@ public:
 	UINT16 framresourcenum;
 	FrameResource* currentframeresource;
 	Matrix1 objConstants1;
+	POINT mLastMousePos;
 };
 

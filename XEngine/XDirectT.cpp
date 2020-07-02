@@ -1,5 +1,6 @@
 #include "XDirectT.h"
 #include "XWindow.h"
+#include <algorithm>
 #include <vector>
 #include <d3dcompiler.h>
 #include "d3dx12.h"
@@ -7,6 +8,7 @@
 #include "XD3dUtil.h"
 #include "MeshBulid.h"
 #include "FrameResource.h"
+#include "XMath.h"
 #pragma comment(lib,"D3D12.lib")
 #pragma comment(lib,"DXGI.lib")
 #pragma comment(lib,"d3dcompiler.lib")
@@ -195,11 +197,11 @@ void XDirectT::BulidPso()
 void XDirectT::initpbr()
 {
 	objConstants1.light[0].LightColor = XMFLOAT3(1.0f, 1.0f, 1.0f);
-	objConstants1.light[0].LightPos = XMFLOAT3(30.f, 30.f, -30.f);
-	objConstants1.light[1].LightColor = XMFLOAT3(0.3f, 0.2f, 0.1f);
-	objConstants1.light[1].LightPos = XMFLOAT3(32.f, 12.f, -14.f);
-	objConstants1.light[2].LightColor = XMFLOAT3(0.23f, 0.33f, 0.11f);
-	objConstants1.light[2].LightPos = XMFLOAT3(2.f, 10.f, -14.f);
+	objConstants1.light[0].LightPos = XMFLOAT3(0.f, 0.f, -15.f);
+	objConstants1.light[1].LightColor = XMFLOAT3(1.0f, 1.0f, 0.1f);
+	objConstants1.light[1].LightPos = XMFLOAT3(0.f, 0.f, 15.f);
+	objConstants1.light[2].LightColor = XMFLOAT3(0.23f, 1.0f, 0.11f);
+	objConstants1.light[2].LightPos = XMFLOAT3(0.f, 0.f, 15.f);
 
 	objConstants1.mat.BaseColor = XMFLOAT3(1.0f, 0, 0);
 	objConstants1.mat.metallic = 0.2;
@@ -556,9 +558,9 @@ void XDirectT::initPSO()
 
 void XDirectT::Update()
 {
-	float x = 20 * sinf(mPhi)*cosf(mTheta);
-	float y = 20 * sinf(mPhi)*sinf(mTheta);
-	float z = 20 * cosf(mPhi);
+	float x = 30 * sinf(mPhi)*cosf(mTheta);
+	float y = 30 * sinf(mPhi)*sinf(mTheta);
+	float z = 30 * cosf(mPhi);
 
 	XMMATRIX P = XMMatrixPerspectiveFovLH(0.25f*3.1415926535f, 1280.f / 720.f, 1.0f, 1000.0f);
 	XMStoreFloat4x4(&mProj, P);
@@ -601,6 +603,36 @@ void XDirectT::Update()
 	currentframeresource->objmatrixa->CopyData(0, objConstants1);
 }
 
+
+void XDirectT::OnMouseMove(WPARAM btnState, int x, int y)
+{
+
+	if ((btnState & MK_LBUTTON) != 0)
+	{
+		// Make each pixel correspond to a quarter of a degree.
+		float dx = XMConvertToRadians(0.25f*static_cast<float>(x - mLastMousePos.x));
+		float dy = XMConvertToRadians(0.25f*static_cast<float>(y - mLastMousePos.y));
+
+		// Update angles based on input to orbit camera around box.
+		mTheta += dx;
+		mPhi += dy;
+
+		// Restrict the angle mPhi.
+		mPhi = XMath::Clamp<float>(mPhi, 0.1f, 3.1415926- 0.1f);
+	}
+	else if ((btnState & MK_RBUTTON) != 0)
+	{
+		// Make each pixel correspond to 0.005 unit in the scene.
+		float dx = 0.005f*static_cast<float>(x - mLastMousePos.x);
+		float dy = 0.005f*static_cast<float>(y - mLastMousePos.y);
+
+		// Update the camera radius based on input.
+		mRadius += dx - dy;
+
+		// Restrict the radius.
+		mRadius = XMath::Clamp<float>(mRadius, 3.0f, 15.0f);
+	}
+}
 
 void XDirectT::Draw()
 {

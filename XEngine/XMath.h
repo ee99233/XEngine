@@ -71,4 +71,10 @@ namespace XMath
 		return XMFLOAT3(v1.y*v2.z - v1.z*v2.y, v1.z*v2.x - v1.x*v2.z, v1.x*v2.y - v2.x * v2.y);
 	}
 
+	template<typename T>
+	static T Clamp(const T& x, const T& low, const T& high)
+	{
+		return x < low ? low : (x > high ? high : x);
+	}
+
 }

@@ -52,9 +52,9 @@ float4 PS(VertexOut pout) : SV_Target
 {
     float3 V = normalize(Campos - (float3)pout.PosW);
     float3 N = normalize(pout.Normal);
-    float3 F0 = 0.4;
+    float3 F0 = 0.04;
     F0 = lerp(F0, mat.BaseColor, mat.metallic);
-    float3 Sumcolor;
+    float3 Sumcolor=0.0f;
     for (int i = 0; i < 3;i++)
     {
         
@@ -78,9 +78,9 @@ float4 PS(VertexOut pout) : SV_Target
         }
     }
     
-    Sumcolor = Sumcolor / 3.0f;
-    float3 ambient = float3(0.3f,0.3f,0.3f) * ao * albedo;
-    float3 color=Sumcolor + ambient;
+    Sumcolor = Sumcolor;
+    float3 ambient = float3(0.5f,0.0f,0.0f);
+    float3 color = Sumcolor;
     color = color / (color + float3(1.0,1.0,1.0));
     color = pow(color, float3(1.0f / 2.2f, 1.0f / 2.2f, 1.0f / 2.2f));
     pout.Color = float4(color, 1.0f);
