@@ -197,15 +197,15 @@ void XDirectT::BulidPso()
 void XDirectT::initpbr()
 {
 	objConstants1.light[0].LightColor = XMFLOAT3(1.0f, 1.0f, 1.0f);
-	objConstants1.light[0].LightPos = XMFLOAT3(0.f, 0.f, -15.f);
-	objConstants1.light[1].LightColor = XMFLOAT3(1.0f, 1.0f, 0.1f);
-	objConstants1.light[1].LightPos = XMFLOAT3(0.f, 0.f, 15.f);
-	objConstants1.light[2].LightColor = XMFLOAT3(0.23f, 1.0f, 0.11f);
-	objConstants1.light[2].LightPos = XMFLOAT3(0.f, 0.f, 15.f);
+	objConstants1.light[0].LightPos = XMFLOAT3(0.f, 0.f, 20.f);
+	objConstants1.light[1].LightColor = XMFLOAT3(1.0f, 1.0f, 1.0f);
+	objConstants1.light[1].LightPos = XMFLOAT3(30.f, 0.f, 0.f);
+	objConstants1.light[2].LightColor = XMFLOAT3(1.0f, 1.0f, 1.0f);
+	objConstants1.light[2].LightPos = XMFLOAT3(-30.f, 0.f, 0.f);
 
 	objConstants1.mat.BaseColor = XMFLOAT3(1.0f, 0, 0);
-	objConstants1.mat.metallic = 0.2;
-	objConstants1.mat.Rougress = 0.3;
+	objConstants1.mat.metallic = 0.02;
+	objConstants1.mat.Rougress = 0.1;
 	objConstants1.ao = 0.2;
 	objConstants1.albedo = 0.3;
 	objConstants1.gworld._11 = 1.0f;
@@ -452,7 +452,7 @@ void XDirectT::InitVertxIndex()
 
 	vector<XVertx4> vertxs;
 	vector<UINT16> index;
-	MeshBulid::GetMeshBulid()->CreateSphere(10,20,20, vertxs,index);
+	MeshBulid::GetMeshBulid()->CreateSphere(10,40,40, vertxs,index);
 
 	UINT bytesize = vertxs.size() * sizeof(XVertx4);
 	UINT inbytesize = index.size() * sizeof(UINT16);
@@ -558,9 +558,9 @@ void XDirectT::initPSO()
 
 void XDirectT::Update()
 {
-	float x = 30 * sinf(mPhi)*cosf(mTheta);
-	float y = 30 * sinf(mPhi)*sinf(mTheta);
-	float z = 30 * cosf(mPhi);
+	float x = mRadius * sinf(mPhi)*cosf(mTheta);
+	float y = mRadius * sinf(mPhi)*sinf(mTheta);
+	float z = mRadius * cosf(mPhi);
 
 	XMMATRIX P = XMMatrixPerspectiveFovLH(0.25f*3.1415926535f, 1280.f / 720.f, 1.0f, 1000.0f);
 	XMStoreFloat4x4(&mProj, P);

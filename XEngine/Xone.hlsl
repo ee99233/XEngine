@@ -52,7 +52,7 @@ float4 PS(VertexOut pout) : SV_Target
 {
     float3 V = normalize(Campos - (float3)pout.PosW);
     float3 N = normalize(pout.Normal);
-    float3 F0 = 0.04;
+    float3 F0 = 0.08;
     F0 = lerp(F0, mat.BaseColor, mat.metallic);
     float3 Sumcolor=0.0f;
     for (int i = 0; i < 3;i++)
@@ -60,7 +60,10 @@ float4 PS(VertexOut pout) : SV_Target
         
         float3 L = normalize(light[i].LoghtPos - (float3) pout.PosW);
         float Llength = length(light[i].LoghtPos - (float3) pout.PosW);
-        float atten = 1.0f / (Llength * Llength);
+       
+         float atten = 1.0f / (Llength * Llength);
+        
+           
         float3 H = normalize(V + L);
         float NOL = saturate(dot(N, L));
         float VOH = saturate(dot(V, H));
@@ -74,13 +77,13 @@ float4 PS(VertexOut pout) : SV_Target
             float G = G_Smith(mat.Rougress,NOL, NOV);
             float num = (4 * NOV * NOL);
             float3 specular = (D * F * G) / max(num,0.001);
-            Sumcolor += (specular + kd * (mat.BaseColor / PI)) * light[i].LightColor*atten*NOL;
+            Sumcolor += (specular + kd * (mat.BaseColor / 3.14159265359)) * light[i].LightColor * atten * NOL;
         }
     }
     
     Sumcolor = Sumcolor;
-    float3 ambient = float3(0.5f,0.0f,0.0f);
-    float3 color = Sumcolor;
+    float3 ambient = float3(0.3f,0.3f,0.3f)*mat.BaseColor;
+    float3 color = Sumcolor + ambient;
     color = color / (color + float3(1.0,1.0,1.0));
     color = pow(color, float3(1.0f / 2.2f, 1.0f / 2.2f, 1.0f / 2.2f));
     pout.Color = float4(color, 1.0f);

@@ -160,7 +160,7 @@ void MeshBulid::CreateSphere(UINT r, UINT m, UINT n, OUT vector<XVertx4> &invert
 		float sinr = sinf(phi)*r;
 		for (int j = 0; j <= m; ++j)
 		{
-			float th = dth * j;
+			float th = 2*PI-dth * j;
 			float x = cosf(th) * sinr;
 			float y = sinf(th)*sinr;
 			float z = cosf(phi)*r;
@@ -194,20 +194,27 @@ void MeshBulid::CreateSphere(UINT r, UINT m, UINT n, OUT vector<XVertx4> &invert
 
 
 	int index = invertxs.size();
-	for (int i = 0; i <= m; ++i)
+	for (int i = 0; i < m; ++i)
 	{
-		inindex.push_back(i);
-		inindex.push_back(i + 1);
-		inindex.push_back(index - 2);
+		
 		inindex.push_back((n - 2)*rcount + i);
-		inindex.push_back((n - 2)*rcount+ i + 1);
 		inindex.push_back(index - 1);
+		inindex.push_back((n - 2)*rcount + i+1);
+		
+	
+		
+		inindex.push_back(i+1);
+		inindex.push_back(index - 2);
+		inindex.push_back(i);
+		
+		
 	}
 
-	UINT Trinum = inindex.size() / 3;
+	UINT Trinum = inindex.size();
 
 	for (int i = 0; i < Trinum; i += 3)
 	{
+		
 		XMFLOAT3 p1 = invertxs[inindex[i]].Pos;
 		XMFLOAT3 p2 = invertxs[inindex[i+1]].Pos;
 		XMFLOAT3 p3 = invertxs[inindex[i + 2]].Pos;
@@ -215,7 +222,7 @@ void MeshBulid::CreateSphere(UINT r, UINT m, UINT n, OUT vector<XVertx4> &invert
 		XMFLOAT3 v1(p2.x - p1.x, p2.y - p1.y, p2.z - p1.z);
 		XMFLOAT3 v2(p3.x - p1.x, p3.y - p1.y, p3.z - p1.z);
 
-		XMFLOAT3 n = CrossTS(v2, v1);
+		XMFLOAT3 n = CrossTS(v1, v2);
 
 		invertxs[inindex[i]].Normal.x += n.x;
 		invertxs[inindex[i]].Normal.y += n.y;
@@ -229,7 +236,7 @@ void MeshBulid::CreateSphere(UINT r, UINT m, UINT n, OUT vector<XVertx4> &invert
 		invertxs[inindex[i+2]].Normal.y += n.y;
 		invertxs[inindex[i+2]].Normal.z += n.z;
 	}
-
+	
 
 }
 
