@@ -15,6 +15,7 @@
 #include "FrameResource.h"
 using namespace std;
 using namespace XMath;
+struct Tecture;
 class XDirectT
 {
 	//SingletonX(XDirectT, xdirectx)
@@ -40,6 +41,7 @@ public:
 	void BulidCostantBuff();
 	void Draw();
 	void Update();
+	void CreateTexture();
 	void  OnMouseMove(WPARAM btnState, int x, int y);
 	Microsoft::WRL::ComPtr<ID3DBlob> ShaderCompile(const  wstring &filename, const  string &pdefine, const   string &ptarget);
 	static XDirectT* xdirectx;
@@ -101,5 +103,7 @@ public:
 	FrameResource* currentframeresource;
 	Matrix1 objConstants1;
 	POINT mLastMousePos;
+	unique_ptr<Tecture> text2d;
+
 };
 

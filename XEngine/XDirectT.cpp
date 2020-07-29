@@ -9,6 +9,7 @@
 #include "MeshBulid.h"
 #include "FrameResource.h"
 #include "XMath.h"
+#include "DDSTextureLoader.h"
 #pragma comment(lib,"D3D12.lib")
 #pragma comment(lib,"DXGI.lib")
 #pragma comment(lib,"d3dcompiler.lib")
@@ -495,8 +496,8 @@ void XDirectT::InitVertxIndex()
 	boxMesh->VSizeInBytes = bytesize;
 	boxMesh->VStrideInBytes = sizeof(XVertx4);
 	boxMesh->xmat.BaseColor = XMFLOAT3(0.2, 0.2, 0.2);
-	boxMesh->xmat.metallic = 0.2;
-	boxMesh->xmat.Rougress = 0.5;
+	boxMesh->xmat.metallic = 0.2f;
+	boxMesh->xmat.Rougress = 0.5f;
 
 }
 
@@ -603,6 +604,19 @@ void XDirectT::Update()
 	currentframeresource->objmatrixa->CopyData(0, objConstants1);
 }
 
+
+void XDirectT::CreateTexture()
+{
+	text2d = make_unique<Tecture>();
+	text2d->name = "text2d";
+	text2d->filename= L"D:/Textures/bricks.dds";
+	if (FAILED(CreateDDSTextureFromFile12(d3ddevice.Get(), CommandList.Get(), text2d->filename.c_str(), text2d->Resource, text2d->UploadReource)))
+	{
+		return ;
+	}
+
+
+}
 
 void XDirectT::OnMouseMove(WPARAM btnState, int x, int y)
 {

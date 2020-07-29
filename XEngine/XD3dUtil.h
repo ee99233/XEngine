@@ -3,6 +3,7 @@
 #include <wrl.h>
 #include <dxgi1_4.h>
 #include "d3dx12.h"
+#include <string>
 #define SingletonX(ClassType,ClassName)\
 private:                             \
 	static ClassType*  ClassName; \
@@ -142,4 +143,12 @@ private:
 __declspec(selectany) D3d12Util* D3d12Util::until=nullptr;
 
 
+struct Tecture
+{
+	std::wstring filename;
+	std::string name;
+	ComPtr<ID3D12Resource> Resource;
+	ComPtr<ID3D12Resource> UploadReource;
 
+
+};

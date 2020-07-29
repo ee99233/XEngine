@@ -24,6 +24,7 @@ struct VertexIn
     float3 PosL : POSITION;
     float4 Color : COLOR;
     float3 NORMAL : NORMAL;
+    float2 TextCord : TEXCOORD;
 };
 
 struct VertexOut

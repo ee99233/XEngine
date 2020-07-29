@@ -12,6 +12,7 @@ namespace XMath
 		XMFLOAT3 Pos;
 		XMFLOAT4 Color;
 		XMFLOAT3 Normal;
+		XMFLOAT2 TextCord;
 	
 
 	};
