@@ -42,6 +42,7 @@ public:
 	void Draw();
 	void Update();
 	void CreateTexture();
+	std::array<const CD3DX12_STATIC_SAMPLER_DESC, 6> GetStaticSamplers();
 	void  OnMouseMove(WPARAM btnState, int x, int y);
 	Microsoft::WRL::ComPtr<ID3DBlob> ShaderCompile(const  wstring &filename, const  string &pdefine, const   string &ptarget);
 	static XDirectT* xdirectx;
@@ -66,6 +67,7 @@ public:
 	Microsoft::WRL::ComPtr<ID3D12Resource> SwpainChianBuff[buffcout];
 	Microsoft::WRL::ComPtr<ID3D12Resource> DepthStencilView;
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> mcbvheap;
+	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> srvheap;
 
 	GameTimer gameitimer;
 	//shaderCompile
@@ -104,6 +106,6 @@ public:
 	Matrix1 objConstants1;
 	POINT mLastMousePos;
 	unique_ptr<Tecture> text2d;
-
+	 
 };
 

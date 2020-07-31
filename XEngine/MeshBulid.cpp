@@ -153,9 +153,11 @@ void MeshBulid::CreateSphere(UINT r, UINT m, UINT n, OUT vector<XVertx4> &invert
 
 	float dphi = PI / n;
 	float dth = 2 * PI / m;
-
+	float du = 1.0f / m;
+	float dv = 1.0f / n;
 	for (int h = 1;h< n; ++h)
 	{
+		float v =1- dv * h;
  		float phi = PI-dphi * h;
 		float sinr = sinf(phi)*r;
 		for (int j = 0; j <= m; ++j)
@@ -164,7 +166,8 @@ void MeshBulid::CreateSphere(UINT r, UINT m, UINT n, OUT vector<XVertx4> &invert
 			float x = cosf(th) * sinr;
 			float y = sinf(th)*sinr;
 			float z = cosf(phi)*r;
-			invertxs.push_back(std::move(XVertx4({ XMFLOAT3(x, y, z), XMFLOAT4(Colors::Cyan) }))); 
+			float u = du * j;
+			invertxs.push_back(std::move(XVertx4({ XMFLOAT3(x, y, z), XMFLOAT4(Colors::Cyan),XMFLOAT3(0,0,0),XMFLOAT2(u,v) }))); 
 		}
 	}
 	int rcount = m + 1;

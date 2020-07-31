@@ -1,5 +1,15 @@
 #include "Light.hlsl"
 #include "BRDF.hlsl"
+
+Texture2D BrickMap : register(t0);
+
+SamplerState gsamPointWrap : register(s0);
+SamplerState gsamPointClamp : register(s1);
+SamplerState gsamLinearWrap : register(s2);
+SamplerState gsamLinearClamp : register(s3);
+SamplerState gsamAnisotropicWrap : register(s4);
+SamplerState gsamAnisotropicClamp : register(s5);
+
 cbuffer cbproject : register(b0)
 {
     float4x4 gWorldtoview;
@@ -19,6 +29,8 @@ cbuffer cbtest: register(b1)
     
 }
 
+
+
 struct VertexIn
 {
     float3 PosL : POSITION;
@@ -33,6 +45,7 @@ struct VertexOut
     float4 Color : COLOR;
     float4 PosW : POSITIONT;
     float3 Normal : NORMAL;
+    float2 TextCord : TEXCOORD;
 };
 
 
@@ -44,6 +57,7 @@ VertexOut VS(VertexIn pin)
     vout.PosH = mul(float4(pin.PosL, 1.0f), gWorldtoview);
     vout.PosW = mul(float4(pin.PosL, 1.0f),gworld);
     vout.Normal = mul(pin.NORMAL, (float3x3) gworld);
+    vout.TextCord = pin.TextCord;
     vout.Color = pin.Color;
     return vout;
 
@@ -51,10 +65,11 @@ VertexOut VS(VertexIn pin)
 
 float4 PS(VertexOut pout) : SV_Target
 {
+    float co = BrickMap.Sample(gsamAnisotropicClamp, pout.TextCord);
     float3 V = normalize(Campos - (float3)pout.PosW);
     float3 N = normalize(pout.Normal);
     float3 F0 = 0.08;
-    F0 = lerp(F0, mat.BaseColor, mat.metallic);
+    F0 = lerp(F0, co, mat.metallic);
     float3 Sumcolor=0.0f;
     for (int i = 0; i < 3;i++)
     {
@@ -78,12 +93,12 @@ float4 PS(VertexOut pout) : SV_Target
             float G = G_Smith(mat.Rougress,NOL, NOV);
             float num = (4 * NOV * NOL);
             float3 specular = (D * F * G) / max(num,0.001);
-            Sumcolor += (specular + kd * (mat.BaseColor / 3.14159265359)) * light[i].LightColor * atten * NOL;
+            Sumcolor += (specular + kd * (co / 3.14159265359)) * light[i].LightColor * atten * NOL;
         }
     }
     
     Sumcolor = Sumcolor;
-    float3 ambient = float3(0.3f,0.3f,0.3f)*mat.BaseColor;
+    float3 ambient = float3(0.3f, 0.3f, 0.3f) * co;
     float3 color = Sumcolor + ambient;
     color = color / (color + float3(1.0,1.0,1.0));
     color = pow(color, float3(1.0f / 2.2f, 1.0f / 2.2f, 1.0f / 2.2f));

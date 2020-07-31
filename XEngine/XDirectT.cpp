@@ -162,10 +162,12 @@ void XDirectT::InitD3d()
 		D3D12_FEATURE_MULTISAMPLE_QUALITY_LEVELS,
 		&msQualityLevels,
 		sizeof(msQualityLevels));
+	
 	CreateGpuCommand();
 	CreateRerousce();
 	CreateSwapchain();
 	CreateD3dview();
+	
 	BulidPso();
 	initpbr();
 }
@@ -254,6 +256,16 @@ void XDirectT::CreateRerousce()
 		return;
 	}
 
+	D3D12_DESCRIPTOR_HEAP_DESC srvdesc;
+	srvdesc.NumDescriptors = 1;
+	srvdesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+	srvdesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+	srvdesc.NodeMask = 0;
+	if (FAILED(d3ddevice->CreateDescriptorHeap(&srvdesc, IID_PPV_ARGS(srvheap.GetAddressOf()))))
+	{
+		return ;
+	}
+
 
 }
 
@@ -308,7 +320,7 @@ void XDirectT::CreateD3dview()
 	CommandList->Reset(CommandAlloctor.Get(),nullptr);
 	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvhandle(mrtvheap->GetCPUDescriptorHandleForHeapStart());
 
-
+	CreateTexture();
 
 
 	for (int i = 0; i < buffcout; ++i)
@@ -377,6 +389,17 @@ void XDirectT::CreateD3dview()
 	mScreenViewport.MaxDepth = 1.0f;
 
 	mScissorRect = { 0, 0, XWindow::GetXwindow()->Width, XWindow::GetXwindow()->Height };
+
+
+	CD3DX12_CPU_DESCRIPTOR_HANDLE hde(srvheap->GetCPUDescriptorHandleForHeapStart());
+	D3D12_SHADER_RESOURCE_VIEW_DESC srcdesc = {};
+	srcdesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srcdesc.Format = text2d->Resource->GetDesc().Format;
+	srcdesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srcdesc.Texture2D.MostDetailedMip = 0;
+	srcdesc.Texture2D.MipLevels = text2d->Resource->GetDesc().MipLevels;
+	srcdesc.Texture2D.ResourceMinLODClamp = 0.0f;
+	d3ddevice->CreateShaderResourceView(text2d->Resource.Get(), &srcdesc, hde);
 }
 
 void XDirectT::CalcFrame()
@@ -429,12 +452,19 @@ void XDirectT::BulidCostantBuff()
 void XDirectT::initRootSingture()
 {
 
-	CD3DX12_ROOT_PARAMETER slotRootpa[2];
-	CD3DX12_DESCRIPTOR_RANGE cbvtable;
-	cbvtable.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 2, 0);
+	CD3DX12_ROOT_PARAMETER slotRootpa[3];
+	CD3DX12_DESCRIPTOR_RANGE srvtable;
+	srvtable.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
+	
 	slotRootpa[0].InitAsConstantBufferView(0);
 	slotRootpa[1].InitAsConstantBufferView(1);
-	CD3DX12_ROOT_SIGNATURE_DESC rootsdesc(2, slotRootpa, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+	slotRootpa[2].InitAsDescriptorTable(1,&srvtable, D3D12_SHADER_VISIBILITY_PIXEL);
+
+	auto sampleas = GetStaticSamplers();
+	CD3DX12_ROOT_SIGNATURE_DESC rootsdesc(3, slotRootpa, sampleas.size(), sampleas.data(), D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+
+
+
 	Microsoft::WRL::ComPtr<ID3DBlob> serializedRootSig = nullptr;
 	Microsoft::WRL::ComPtr<ID3DBlob> errorBlob=nullptr;
 	HRESULT hr= D3D12SerializeRootSignature(&rootsdesc, D3D_ROOT_SIGNATURE_VERSION_1, serializedRootSig.GetAddressOf(),errorBlob.GetAddressOf());
@@ -511,6 +541,7 @@ void XDirectT::BulidShader()
 		{"POSITION",0,DXGI_FORMAT_R32G32B32_FLOAT,0,0,D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,0},
 		{"COLOR",0,DXGI_FORMAT_R32G32B32A32_FLOAT,0,12,D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,0},
 		{"NORMAL",0,DXGI_FORMAT_R32G32B32_FLOAT,0,28,D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,0},
+		{"TEXCOORD",0,DXGI_FORMAT_R32G32_FLOAT,0,40,D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,0},
 	};
 
 
@@ -618,6 +649,62 @@ void XDirectT::CreateTexture()
 
 }
 
+std::array<const CD3DX12_STATIC_SAMPLER_DESC, 6> XDirectT::GetStaticSamplers()
+{
+
+	const CD3DX12_STATIC_SAMPLER_DESC pointWrap(
+		0, // shaderRegister
+		D3D12_FILTER_MIN_MAG_MIP_POINT, // filter
+		D3D12_TEXTURE_ADDRESS_MODE_WRAP,  // addressU
+		D3D12_TEXTURE_ADDRESS_MODE_WRAP,  // addressV
+		D3D12_TEXTURE_ADDRESS_MODE_WRAP); // addressW
+
+	const CD3DX12_STATIC_SAMPLER_DESC pointClamp(
+		1, // shaderRegister
+		D3D12_FILTER_MIN_MAG_MIP_POINT, // filter
+		D3D12_TEXTURE_ADDRESS_MODE_CLAMP,  // addressU
+		D3D12_TEXTURE_ADDRESS_MODE_CLAMP,  // addressV
+		D3D12_TEXTURE_ADDRESS_MODE_CLAMP); // addressW
+
+	const CD3DX12_STATIC_SAMPLER_DESC linearWrap(
+		2, // shaderRegister
+		D3D12_FILTER_MIN_MAG_MIP_LINEAR, // filter
+		D3D12_TEXTURE_ADDRESS_MODE_WRAP,  // addressU
+		D3D12_TEXTURE_ADDRESS_MODE_WRAP,  // addressV
+		D3D12_TEXTURE_ADDRESS_MODE_WRAP); // addressW
+
+	const CD3DX12_STATIC_SAMPLER_DESC linearClamp(
+		3, // shaderRegister
+		D3D12_FILTER_MIN_MAG_MIP_LINEAR, // filter
+		D3D12_TEXTURE_ADDRESS_MODE_CLAMP,  // addressU
+		D3D12_TEXTURE_ADDRESS_MODE_CLAMP,  // addressV
+		D3D12_TEXTURE_ADDRESS_MODE_CLAMP); // addressW
+
+	const CD3DX12_STATIC_SAMPLER_DESC anisotropicWrap(
+		4, // shaderRegister
+		D3D12_FILTER_ANISOTROPIC, // filter
+		D3D12_TEXTURE_ADDRESS_MODE_WRAP,  // addressU
+		D3D12_TEXTURE_ADDRESS_MODE_WRAP,  // addressV
+		D3D12_TEXTURE_ADDRESS_MODE_WRAP,  // addressW
+		0.0f,                             // mipLODBias
+		8);                               // maxAnisotropy
+
+	const CD3DX12_STATIC_SAMPLER_DESC anisotropicClamp(
+		5, // shaderRegister
+		D3D12_FILTER_ANISOTROPIC, // filter
+		D3D12_TEXTURE_ADDRESS_MODE_CLAMP,  // addressU
+		D3D12_TEXTURE_ADDRESS_MODE_CLAMP,  // addressV
+		D3D12_TEXTURE_ADDRESS_MODE_CLAMP,  // addressW
+		0.0f,                              // mipLODBias
+		8);                                // maxAnisotropy
+
+	return {
+		pointWrap, pointClamp,
+		linearWrap, linearClamp,
+		anisotropicWrap, anisotropicClamp };
+
+}
+
 void XDirectT::OnMouseMove(WPARAM btnState, int x, int y)
 {
 
@@ -674,15 +761,18 @@ void XDirectT::Draw()
 
 	CommandList->OMSetRenderTargets(1, &CD3DX12_CPU_DESCRIPTOR_HANDLE(mrtvheap->GetCPUDescriptorHandleForHeapStart(), CurrentBuffnum, MrtvDescriptionsize), true, &(mdsvheap->GetCPUDescriptorHandleForHeapStart()));
 
-	/*ID3D12DescriptorHeap* descriptorheap[] = {mcbvheap.Get()};
-	CommandList->SetDescriptorHeaps(_countof(descriptorheap), descriptorheap);*/
+	ID3D12DescriptorHeap* descriptorheap[] = { srvheap.Get()};
+	CommandList->SetDescriptorHeaps(_countof(descriptorheap), descriptorheap);
+	CD3DX12_GPU_DESCRIPTOR_HANDLE tex(srvheap->GetGPUDescriptorHandleForHeapStart());
 
 	CommandList->SetGraphicsRootSignature(RootSignature.Get());
 	CommandList->IASetVertexBuffers(0, 1, &boxMesh->getVertxView());
 	CommandList->IASetIndexBuffer(&boxMesh->GetIndexView());
 	CommandList->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	
 	CommandList->SetGraphicsRootConstantBufferView(0, currentframeresource->objmatrix->Getresource()->GetGPUVirtualAddress());
 	CommandList->SetGraphicsRootConstantBufferView(1, currentframeresource->objmatrixa->Getresource()->GetGPUVirtualAddress());
+	CommandList->SetGraphicsRootDescriptorTable(2, tex);
 	CommandList->DrawIndexedInstanced(boxMesh->indexcount, 1, 0, 0, 0);
 	CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(SwpainChianBuff[CurrentBuffnum].Get(),
 		D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
