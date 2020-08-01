@@ -3,6 +3,7 @@
 
 Texture2D BrickMap : register(t0);
 
+
 SamplerState gsamPointWrap : register(s0);
 SamplerState gsamPointClamp : register(s1);
 SamplerState gsamLinearWrap : register(s2);
@@ -65,7 +66,9 @@ VertexOut VS(VertexIn pin)
 
 float4 PS(VertexOut pout) : SV_Target
 {
-    float co = BrickMap.Sample(gsamAnisotropicClamp, pout.TextCord);
+    float4 colorc = BrickMap.Sample(gsamAnisotropicClamp, pout.TextCord);
+    float3 co;
+    co.rgb = colorc.rgb;
     float3 V = normalize(Campos - (float3)pout.PosW);
     float3 N = normalize(pout.Normal);
     float3 F0 = 0.08;
@@ -98,7 +101,7 @@ float4 PS(VertexOut pout) : SV_Target
     }
     
     Sumcolor = Sumcolor;
-    float3 ambient = float3(0.3f, 0.3f, 0.3f) * co;
+    float3 ambient = float3(1.0f, 1.0f, 1.0f) * co;
     float3 color = Sumcolor + ambient;
     color = color / (color + float3(1.0,1.0,1.0));
     color = pow(color, float3(1.0f / 2.2f, 1.0f / 2.2f, 1.0f / 2.2f));
