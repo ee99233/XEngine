@@ -192,8 +192,8 @@ void MeshBulid::CreateSphere(UINT r, UINT m, UINT n, OUT vector<XVertx4> &invert
 
 	
 
-	invertxs.push_back(std::move(XVertx4({ XMFLOAT3(0, 0, -xr), XMFLOAT4(Colors::Cyan) })));
-	invertxs.push_back(std::move(XVertx4({ XMFLOAT3(0, 0, xr), XMFLOAT4(Colors::Cyan) })));
+	invertxs.push_back(std::move(XVertx4({ XMFLOAT3(0, 0, -xr), XMFLOAT4(Colors::Cyan),XMFLOAT3(0,0,0),XMFLOAT2(0,0) })));
+	invertxs.push_back(std::move(XVertx4({ XMFLOAT3(0, 0, xr), XMFLOAT4(Colors::Cyan),XMFLOAT3(0,0,0),XMFLOAT2(0,0) })));
 
 
 	int index = invertxs.size();
@@ -240,6 +240,85 @@ void MeshBulid::CreateSphere(UINT r, UINT m, UINT n, OUT vector<XVertx4> &invert
 		invertxs[inindex[i+2]].Normal.z += n.z;
 	}
 	
+
+}
+
+void MeshBulid::CreateBox(float w, float h, float d, OUT vector<XVertx4> &invertxs, OUT vector<UINT16>& inindex)
+{
+
+	float w2 = w / 2.0f;
+	float h2 = h / 2.0f;
+	float d2 = h / 2.0f;
+
+	invertxs.reserve(24);
+	invertxs.push_back(XVertx4({ XMFLOAT3(-w2, -h2, -d2), XMFLOAT4(Colors::Cyan),XMFLOAT3(0,0,0),XMFLOAT2(0.0f,1.0f) }));
+	invertxs.push_back(XVertx4({ XMFLOAT3(-w2, h2, -d2), XMFLOAT4(Colors::Cyan),XMFLOAT3(0,0,0),XMFLOAT2(0.0f,0.0f) }));
+	invertxs.push_back(XVertx4({ XMFLOAT3(w2, h2, -d2), XMFLOAT4(Colors::Cyan),XMFLOAT3(0,0,0),XMFLOAT2(1.0f,0.0f) }));
+	invertxs.push_back(XVertx4({ XMFLOAT3(w2, -h2, -d2), XMFLOAT4(Colors::Cyan),XMFLOAT3(0,0,0),XMFLOAT2(1.0f,0.0f) }));
+
+	invertxs.push_back(XVertx4({ XMFLOAT3(-w2, -h2, d2), XMFLOAT4(Colors::Cyan),XMFLOAT3(0,0,0),XMFLOAT2(1.0f,1.0f) }));
+	invertxs.push_back(XVertx4({ XMFLOAT3(w2, -h2, d2), XMFLOAT4(Colors::Cyan),XMFLOAT3(0,0,0),XMFLOAT2(0.0f,1.0f) }));
+	invertxs.push_back(XVertx4({ XMFLOAT3(w2, h2, d2), XMFLOAT4(Colors::Cyan),XMFLOAT3(0,0,0),XMFLOAT2(0.0f,0.0f) }));
+	invertxs.push_back(XVertx4({ XMFLOAT3(-w2,h2,d2), XMFLOAT4(Colors::Cyan),XMFLOAT3(0,0,0),XMFLOAT2(1.0f,0.0f) }));
+
+	invertxs.push_back(XVertx4({ XMFLOAT3(-w2, +h2, -d2), XMFLOAT4(Colors::Cyan),XMFLOAT3(0,0,0),XMFLOAT2(0.0f,1.0f) }));
+	invertxs.push_back(XVertx4({ XMFLOAT3(-w2, h2, d2), XMFLOAT4(Colors::Cyan),XMFLOAT3(0,0,0),XMFLOAT2(0.0f,0.0f) }));
+	invertxs.push_back(XVertx4({ XMFLOAT3(w2, h2, d2), XMFLOAT4(Colors::Cyan),XMFLOAT3(0,0,0),XMFLOAT2(1.0f,0.0f) }));
+	invertxs.push_back(XVertx4({ XMFLOAT3(w2, h2, -d2), XMFLOAT4(Colors::Cyan),XMFLOAT3(0,0,0),XMFLOAT2(1.0f,1.0f) }));
+
+	invertxs.push_back(XVertx4({ XMFLOAT3(-w2, -h2, -d2), XMFLOAT4(Colors::Cyan),XMFLOAT3(0,0,0),XMFLOAT2(1.0f,1.0f) }));
+	invertxs.push_back(XVertx4({ XMFLOAT3(w2, -h2,-d2), XMFLOAT4(Colors::Cyan),XMFLOAT3(0,0,0),XMFLOAT2(0.0f,1.0f) }));
+	invertxs.push_back(XVertx4({ XMFLOAT3(w2, -h2, +d2), XMFLOAT4(Colors::Cyan),XMFLOAT3(0,0,0),XMFLOAT2(0.0f,0.0f) }));
+	invertxs.push_back(XVertx4({ XMFLOAT3(-w2, -h2, d2), XMFLOAT4(Colors::Cyan),XMFLOAT3(0,0,0),XMFLOAT2(1.0f,0.0f) }));
+
+	invertxs.push_back(XVertx4({ XMFLOAT3(-w2, -h2, d2), XMFLOAT4(Colors::Cyan),XMFLOAT3(0,0,0),XMFLOAT2(0.0f,1.0f) }));
+	invertxs.push_back(XVertx4({ XMFLOAT3(-w2, h2, d2), XMFLOAT4(Colors::Cyan),XMFLOAT3(0,0,0),XMFLOAT2(0.0f,0.0f) }));
+	invertxs.push_back(XVertx4({ XMFLOAT3(-w2, h2, -d2), XMFLOAT4(Colors::Cyan),XMFLOAT3(0,0,0),XMFLOAT2(1.0f,0.0f) }));
+	invertxs.push_back(XVertx4({ XMFLOAT3(-w2,-h2,-d2), XMFLOAT4(Colors::Cyan),XMFLOAT3(0,0,0),XMFLOAT2(1.0f,1.0f) }));
+
+	invertxs.push_back(XVertx4({ XMFLOAT3(+w2, -h2, -d2), XMFLOAT4(Colors::Cyan),XMFLOAT3(0,0,0),XMFLOAT2(0.0f,1.0f) }));
+	invertxs.push_back(XVertx4({ XMFLOAT3(+w2, h2, -d2), XMFLOAT4(Colors::Cyan),XMFLOAT3(0,0,0),XMFLOAT2(0.0f,0.0f) }));
+	invertxs.push_back(XVertx4({ XMFLOAT3(w2, h2, d2), XMFLOAT4(Colors::Cyan),XMFLOAT3(0,0,0),XMFLOAT2(1.0f,0.0f) }));
+	invertxs.push_back(XVertx4({ XMFLOAT3(w2, -h2, d2), XMFLOAT4(Colors::Cyan),XMFLOAT3(0,0,0),XMFLOAT2(1.0f,1.0f) }));
+
+	inindex.reserve(36);
+	inindex.push_back(0); inindex.push_back(1); inindex.push_back(2);
+	inindex.push_back(0); inindex.push_back(2); inindex.push_back(3);
+	inindex.push_back(4); inindex.push_back(5); inindex.push_back(6);
+	inindex.push_back(4); inindex.push_back(6); inindex.push_back(7);
+	inindex.push_back(8); inindex.push_back(9); inindex.push_back(10);
+	inindex.push_back(8); inindex.push_back(10); inindex.push_back(11);
+	inindex.push_back(12); inindex.push_back(13); inindex.push_back(14);
+	inindex.push_back(12); inindex.push_back(14); inindex.push_back(15);
+	inindex.push_back(16); inindex.push_back(17); inindex.push_back(18);
+	inindex.push_back(16); inindex.push_back(18); inindex.push_back(19);
+	inindex.push_back(20); inindex.push_back(21); inindex.push_back(22);
+	inindex.push_back(20); inindex.push_back(22); inindex.push_back(23);
+
+	for (int i = 0; i < inindex.size(); i += 3)
+	{
+		XMFLOAT3 p1 = invertxs[inindex[i]].Pos;
+		XMFLOAT3 p2 = invertxs[inindex[i+1]].Pos;
+		XMFLOAT3 p3 = invertxs[inindex[i+2]].Pos;
+		XMFLOAT3 v1(p2.x - p1.x, p2.y - p1.y, p2.z - p1.z);
+		XMFLOAT3 v2(p3.x - p1.x, p3.y - p1.y, p3.z - p1.z);
+		XMFLOAT3 Normal = CrossTS(v1, v2);;
+		invertxs[inindex[i]].Normal.x+= Normal.x;
+		invertxs[inindex[i]].Normal.y += Normal.y;
+		invertxs[inindex[i]].Normal.z += Normal.z;
+
+		invertxs[inindex[i+1]].Normal.x += Normal.x;
+		invertxs[inindex[i+1]].Normal.y += Normal.y;
+		invertxs[inindex[i+1]].Normal.z += Normal.z;
+
+
+		invertxs[inindex[i+2]].Normal.x += Normal.x;
+		invertxs[inindex[i+2]].Normal.y += Normal.y;
+		invertxs[inindex[i+2]].Normal.z += Normal.z;
+	}
+
+	
+
 
 }
 

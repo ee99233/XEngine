@@ -483,7 +483,7 @@ void XDirectT::InitVertxIndex()
 
 	vector<XVertx4> vertxs;
 	vector<UINT16> index;
-	MeshBulid::GetMeshBulid()->CreateSphere(10,40,40, vertxs,index);
+	MeshBulid::GetMeshBulid()->CreateSphere(2.0f,50,10, vertxs,index);
 
 	UINT bytesize = vertxs.size() * sizeof(XVertx4);
 	UINT inbytesize = index.size() * sizeof(UINT16);
@@ -565,7 +565,21 @@ void XDirectT::initPSO()
 
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC dgpsd;
 	ZeroMemory(&dgpsd, sizeof(D3D12_GRAPHICS_PIPELINE_STATE_DESC));
+
+	
+	D3D12_RENDER_TARGET_BLEND_DESC drtbd;
+	drtbd.BlendEnable = true;
+	drtbd.LogicOpEnable = false;
+	drtbd.BlendOp = D3D12_BLEND_OP_ADD;
+	drtbd.DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
+	drtbd.DestBlendAlpha = D3D12_BLEND_ZERO;
+	drtbd.LogicOp = D3D12_LOGIC_OP_NOOP;
+	drtbd.RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+	drtbd.SrcBlend = D3D12_BLEND_SRC_ALPHA;
+	drtbd.SrcBlendAlpha = D3D12_BLEND_ONE;
+
 	dgpsd.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+	dgpsd.BlendState.RenderTarget[0] = drtbd;
 	dgpsd.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
 	dgpsd.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
 	dgpsd.InputLayout = { dinputeles.data(),(UINT)dinputeles.size() };
@@ -711,7 +725,7 @@ void XDirectT::OnMouseMove(WPARAM btnState, int x, int y)
 	if ((btnState & MK_LBUTTON) != 0)
 	{
 		// Make each pixel correspond to a quarter of a degree.
-		float dx = XMConvertToRadians(0.25f*static_cast<float>(x - mLastMousePos.x));
+		float dx = XMConvertToRadians(0.5f*static_cast<float>(x - mLastMousePos.x));
 		float dy = XMConvertToRadians(0.25f*static_cast<float>(y - mLastMousePos.y));
 
 		// Update angles based on input to orbit camera around box.
@@ -719,7 +733,9 @@ void XDirectT::OnMouseMove(WPARAM btnState, int x, int y)
 		mPhi += dy;
 
 		// Restrict the angle mPhi.
-		mPhi = XMath::Clamp<float>(mPhi, 0.1f, 3.1415926- 0.1f);
+		mPhi = XMath::Clamp<float>(mPhi, 0.1f, 3.1415926f- 0.1f);
+		
+
 	}
 	else if ((btnState & MK_RBUTTON) != 0)
 	{
@@ -733,6 +749,8 @@ void XDirectT::OnMouseMove(WPARAM btnState, int x, int y)
 		// Restrict the radius.
 		mRadius = XMath::Clamp<float>(mRadius, 3.0f, 15.0f);
 	}
+	mLastMousePos.x = x;
+	mLastMousePos.y = y;
 }
 
 void XDirectT::Draw()
@@ -760,7 +778,7 @@ void XDirectT::Draw()
 	CommandList->ClearDepthStencilView(mdsvheap->GetCPUDescriptorHandleForHeapStart(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
 
 	CommandList->OMSetRenderTargets(1, &CD3DX12_CPU_DESCRIPTOR_HANDLE(mrtvheap->GetCPUDescriptorHandleForHeapStart(), CurrentBuffnum, MrtvDescriptionsize), true, &(mdsvheap->GetCPUDescriptorHandleForHeapStart()));
-
+	//CommandList->OMSetBlendFactor(D3D12_BLEND_INV_SRC_ALPHA);
 	ID3D12DescriptorHeap* descriptorheap[] = { srvheap.Get()};
 	CommandList->SetDescriptorHeaps(_countof(descriptorheap), descriptorheap);
 	CD3DX12_GPU_DESCRIPTOR_HANDLE tex(srvheap->GetGPUDescriptorHandleForHeapStart());
@@ -772,7 +790,7 @@ void XDirectT::Draw()
 	
 	CommandList->SetGraphicsRootConstantBufferView(0, currentframeresource->objmatrix->Getresource()->GetGPUVirtualAddress());
 	CommandList->SetGraphicsRootConstantBufferView(1, currentframeresource->objmatrixa->Getresource()->GetGPUVirtualAddress());
-	CommandList->SetGraphicsRootDescriptorTable(2, tex);
+	CommandList->SetGraphicsRootDescriptorTable(2, tex)
 	CommandList->DrawIndexedInstanced(boxMesh->indexcount, 1, 0, 0, 0);
 	CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(SwpainChianBuff[CurrentBuffnum].Get(),
 		D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
