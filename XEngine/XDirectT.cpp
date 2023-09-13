@@ -10,6 +10,7 @@
 #include "FrameResource.h"
 #include "XMath.h"
 #include "DDSTextureLoader.h"
+#include <fstream>
 #pragma comment(lib,"D3D12.lib")
 #pragma comment(lib,"DXGI.lib")
 #pragma comment(lib,"d3dcompiler.lib")
@@ -478,15 +479,15 @@ void XDirectT::initRootSingture()
 
 void XDirectT::InitVertxIndex()
 {
-	
-	boxMesh = make_unique<StaticMesh>();
+	//
+	//boxMesh = make_unique<StaticMesh>();
 
-	vector<XVertx4> vertxs;
-	vector<UINT16> index;
-	MeshBulid::GetMeshBulid()->CreateSphere(2.0f,50,10, vertxs,index);
+	//vector<XVertx4> vertxs;
+	//vector<UINT16> index;
+	//MeshBulid::GetMeshBulid()->CreateSphere(2.0f,50,10, vertxs,index);
 
-	UINT bytesize = vertxs.size() * sizeof(XVertx4);
-	UINT inbytesize = index.size() * sizeof(UINT16);
+	//UINT bytesize = vertxs.size() * sizeof(XVertx4);
+	//UINT inbytesize = index.size() * sizeof(UINT16);
 
 
 	//for (int i = 0; i < vertxs.size(); ++i)
@@ -517,7 +518,7 @@ void XDirectT::InitVertxIndex()
 
 	//}
 
-	boxMesh->indexcount = index.size();
+	/*boxMesh->indexcount = index.size();
 
 	D3d12Util::GetUtil()->GetDefaultBuff(CommandList, d3ddevice, boxMesh->UploadVertx, boxMesh->Vertxbuff, bytesize, vertxs.data());
 	D3d12Util::GetUtil()->GetDefaultBuff(CommandList, d3ddevice, boxMesh->UploadIndex, boxMesh->Indexbuff, inbytesize, index.data());
@@ -527,14 +528,148 @@ void XDirectT::InitVertxIndex()
 	boxMesh->VStrideInBytes = sizeof(XVertx4);
 	boxMesh->xmat.BaseColor = XMFLOAT3(0.2, 0.2, 0.2);
 	boxMesh->xmat.metallic = 0.2f;
-	boxMesh->xmat.Rougress = 0.5f;
+	boxMesh->xmat.Rougress = 0.5f;*/
+
+
+	unique_ptr<StaticMesh> floormesh = make_unique<StaticMesh>();
+	std::array<XVertx4, 20> vertices =
+	{
+		// Floor: Observe we tile texture coordinates.
+		XVertx4(-3.5f, 0.0f, -10.0f,0.0f, 1.0f, 0.0f, 0.0f, 4.0f), // 0 
+		XVertx4(-3.5f, 0.0f,   0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f),
+		XVertx4(7.5f, 0.0f,   0.0f, 0.0f, 1.0f, 0.0f, 4.0f, 0.0f),
+		XVertx4(7.5f, 0.0f, -10.0f, 0.0f, 1.0f, 0.0f, 4.0f, 4.0f),
+
+		// Wall: Observe we tile texture coordinates, and that we
+		// leave a gap in the middle for the mirror.
+		XVertx4(-3.5f, 0.0f, 0.0f, 0.0f, 0.0f, -1.0f, 0.0f, 2.0f), // 4
+		XVertx4(-3.5f, 4.0f, 0.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f),
+		XVertx4(-2.5f, 4.0f, 0.0f, 0.0f, 0.0f, -1.0f, 0.5f, 0.0f),
+		XVertx4(-2.5f, 0.0f, 0.0f, 0.0f, 0.0f, -1.0f, 0.5f, 2.0f),
+
+		XVertx4(2.5f, 0.0f, 0.0f, 0.0f, 0.0f, -1.0f, 0.0f, 2.0f), // 8 
+		XVertx4(2.5f, 4.0f, 0.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f),
+		XVertx4(7.5f, 4.0f, 0.0f, 0.0f, 0.0f, -1.0f, 2.0f, 0.0f),
+		XVertx4(7.5f, 0.0f, 0.0f, 0.0f, 0.0f, -1.0f, 2.0f, 2.0f),
+
+		XVertx4(-3.5f, 4.0f, 0.0f, 0.0f, 0.0f, -1.0f, 0.0f, 1.0f), // 12
+		XVertx4(-3.5f, 6.0f, 0.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f),
+		XVertx4(7.5f, 6.0f, 0.0f, 0.0f, 0.0f, -1.0f, 6.0f, 0.0f),
+		XVertx4(7.5f, 4.0f, 0.0f, 0.0f, 0.0f, -1.0f, 6.0f, 1.0f),
+
+		// Mirror
+		XVertx4(-2.5f, 0.0f, 0.0f, 0.0f, 0.0f, -1.0f, 0.0f, 1.0f), // 16
+		XVertx4(-2.5f, 4.0f, 0.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f),
+		XVertx4(2.5f, 4.0f, 0.0f, 0.0f, 0.0f, -1.0f, 1.0f, 0.0f),
+		XVertx4(2.5f, 0.0f, 0.0f, 0.0f, 0.0f, -1.0f, 1.0f, 1.0f)
+	};
+
+	std::array<UINT, 30> indices =
+	{
+		// Floor
+		0, 1, 2,
+		0, 2, 3,
+
+		// Walls
+		4, 5, 6,
+		4, 6, 7,
+
+		8, 9, 10,
+		8, 10, 11,
+
+		12, 13, 14,
+		12, 14, 15,
+
+		// Mirror
+		16, 17, 18,
+		16, 18, 19
+	};
+
+	UINT bytesize = vertices.size() * sizeof(XVertx4);
+	UINT ibytesize = indices.size() * sizeof(UINT);
+
+	SubMesh floor;
+	floor.IndexCount = 6;
+	floor.StartIndexLocation = 0;
+	floor.StartIndexLocation = 0;
+
+	SubMesh wall;
+	wall.IndexCount=18;
+	wall.BaseVertexLocation = 0;
+	wall.StartIndexLocation = 6;
+
+	SubMesh mirror;
+	mirror.BaseVertexLocation = 0;
+	mirror.StartIndexLocation = 24;
+	mirror.IndexCount=6;
+
+	D3d12Util::GetUtil()->GetDefaultBuff(CommandList, d3ddevice, floormesh->UploadVertx, floormesh->Vertxbuff, bytesize, vertices.data());
+	D3d12Util::GetUtil()->GetDefaultBuff(CommandList, d3ddevice, floormesh->UploadIndex, floormesh->Indexbuff, ibytesize, indices.data());
+
+	floormesh->filename = "floor";
+	floormesh->indexcount = indices.size();
+	floormesh->ISizeInBytes = ibytesize;
+	floormesh->VSizeInBytes = bytesize;
+	floormesh->VStrideInBytes = sizeof(XVertx4);
+	floormesh->xmat.BaseColor = XMFLOAT3(0.2, 0.2, 0.2);
+	floormesh->xmat.metallic = 0.2f;
+	floormesh->xmat.Rougress = 0.5f;
+
+
+	
+
+
+
+	skullmesh = make_unique<StaticMesh>();
+	ifstream fin("F:/XEngine/Models/skull.txt");
+	if (!fin)
+	{
+		return;
+	}
+	UINT vcount = 0;
+	UINT tcount = 0;
+	std::string ignore;
+	fin >> ignore >> vcount;
+	fin >> ignore >> tcount;
+	fin >> ignore >> ignore >> ignore >> ignore;
+	vector<XVertx4>	Vertex(vcount);
+	for (UINT i = 0; i < vcount; ++i)
+	{
+		fin >> Vertex[i].Pos.x >> Vertex[i].Pos.y >> Vertex[i].Pos.z
+			>> Vertex[i].Normal.x >> Vertex[i].Normal.y >> Vertex[i].Normal.z;
+		Vertex[i].TextCord.x = 0.0f;
+		Vertex[i].TextCord.y = 0.0f;
+	}
+
+	fin >> ignore >> ignore >> ignore;
+	vector<UINT> Indexs(tcount*3);
+	for (UINT i = 0; i < tcount;++i)
+	{
+		fin >> Indexs[i * 3] >> Indexs[i * 3 + 1] >> Indexs[i * 3 + 2];
+	}
+
+	UINT bytesizes = Vertex.size() * sizeof(XVertx4);
+	UINT inbytesizes = Indexs.size() * sizeof(UINT);
+
+	skullmesh = make_unique<StaticMesh>();
+	skullmesh->filename = "skull";
+	skullmesh->indexcount = Indexs.size();
+	D3d12Util::GetUtil()->GetDefaultBuff(CommandList, d3ddevice, skullmesh->UploadVertx, skullmesh->Vertxbuff, bytesizes, Vertex.data());
+	D3d12Util::GetUtil()->GetDefaultBuff(CommandList, d3ddevice, skullmesh->UploadIndex, skullmesh->Indexbuff, inbytesizes, Indexs.data());
+	skullmesh->VStrideInBytes = sizeof(XVertx4);
+	skullmesh->VSizeInBytes = bytesizes;
+	skullmesh->ISizeInBytes = inbytesizes;
+	skullmesh->xmat.BaseColor = XMFLOAT3(0.2, 0.2, 0.2);
+	skullmesh->xmat.metallic = 0.2f;
+	skullmesh->xmat.Rougress = 0.5f;
+	fin.close();
 
 }
 
 void XDirectT::BulidShader()
 {
-	vsshader = ShaderCompile(L"D:\\XEngine\\XEngine\\Xone.hlsl", "VS", "vs_5_0");
-	psshafer = ShaderCompile(L"D:\\XEngine\\XEngine\\Xone.hlsl", "PS", "ps_5_0");
+	vsshader = ShaderCompile(L"F:\\XEngine\\XEngine\\Xone.hlsl", "VS", "vs_5_0");
+	psshafer = ShaderCompile(L"F:\\XEngine\\XEngine\\Xone.hlsl", "PS", "ps_5_0");
 
 	dinputeles =
 	{
@@ -552,7 +687,7 @@ void XDirectT::initPSO()
 	//D3D12_RASTERIZER_DESC drd;
 	//drd.FillMode = D3D12_FILL_MODE_SOLID;
 	//drd.CullMode = D3D12_CULL_MODE_NONE;
-	//drd.DepthBias = 0;//同深度优先级，阴影在墙上但是深度一样，所以要使阴影深度小于墙深度
+	//drd.DepthBias = 0;//鍚屾繁搴︿紭鍏堢骇锛岄槾褰卞湪澧欎笂浣嗘槸娣卞害涓�鏍凤紝鎵�浠ヨ浣块槾褰辨繁搴﹀皬浜庡娣卞害
 	//drd.ForcedSampleCount = false;
 	//drd.AntialiasedLineEnable = false;
 	//drd.MultisampleEnable = false;
@@ -579,7 +714,6 @@ void XDirectT::initPSO()
 	drtbd.SrcBlendAlpha = D3D12_BLEND_ONE;
 
 	dgpsd.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
-	dgpsd.BlendState.RenderTarget[0] = drtbd;
 	dgpsd.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
 	dgpsd.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
 	dgpsd.InputLayout = { dinputeles.data(),(UINT)dinputeles.size() };
@@ -598,6 +732,77 @@ void XDirectT::initPSO()
 	{
 		return;
 	}
+	PsoMap.insert(make_pair("default", mpso));
+	 
+	Microsoft::WRL::ComPtr<ID3D12PipelineState> mirror;
+	Microsoft::WRL::ComPtr<ID3D12PipelineState> reflect;
+	Microsoft::WRL::ComPtr<ID3D12PipelineState> transparetn;
+	PsoMap.insert(make_pair("mirrorpso", mirror));
+	PsoMap.insert(make_pair("reflectpso", reflect));
+	PsoMap.insert(make_pair("transparetn", transparetn));
+
+	D3D12_DEPTH_STENCIL_DESC mirrorDss;
+	mirrorDss.DepthEnable = true;
+	mirrorDss.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
+	mirrorDss.DepthFunc = D3D12_COMPARISON_FUNC_LESS;
+	mirrorDss.StencilEnable = true;
+	mirrorDss.StencilReadMask = 0xff;
+	mirrorDss.StencilWriteMask = 0xff;
+
+	mirrorDss.FrontFace.StencilDepthFailOp = D3D12_STENCIL_OP_KEEP;
+	mirrorDss.FrontFace.StencilFailOp = D3D12_STENCIL_OP_KEEP;
+	mirrorDss.FrontFace.StencilFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+	mirrorDss.FrontFace.StencilPassOp = D3D12_STENCIL_OP_REPLACE;
+
+	mirrorDss.BackFace.StencilDepthFailOp = D3D12_STENCIL_OP_KEEP;
+	mirrorDss.BackFace.StencilFailOp = D3D12_STENCIL_OP_KEEP;
+	mirrorDss.BackFace.StencilFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+	mirrorDss.BackFace.StencilPassOp = D3D12_STENCIL_OP_REPLACE;
+
+	dgpsd.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+	dgpsd.DepthStencilState = mirrorDss;
+
+	if (FAILED(d3ddevice->CreateGraphicsPipelineState(&dgpsd, IID_PPV_ARGS(PsoMap["mirrorpso"].GetAddressOf()))))
+	{
+		return;
+	}
+
+
+	D3D12_DEPTH_STENCIL_DESC reflrctDSS;
+	reflrctDSS.DepthEnable = true;
+	reflrctDSS.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
+	reflrctDSS.DepthFunc = D3D12_COMPARISON_FUNC_LESS;
+	reflrctDSS.StencilEnable = true;
+	reflrctDSS.StencilReadMask = 0xff;
+	reflrctDSS.StencilWriteMask = 0xff;
+
+	reflrctDSS.FrontFace.StencilDepthFailOp = D3D12_STENCIL_OP_KEEP;
+	reflrctDSS.FrontFace.StencilFailOp = D3D12_STENCIL_OP_KEEP;
+	reflrctDSS.FrontFace.StencilFunc = D3D12_COMPARISON_FUNC_EQUAL;
+	reflrctDSS.FrontFace.StencilPassOp = D3D12_STENCIL_OP_REPLACE;
+
+	reflrctDSS.BackFace.StencilDepthFailOp = D3D12_STENCIL_OP_KEEP;
+	reflrctDSS.BackFace.StencilFailOp = D3D12_STENCIL_OP_KEEP;
+	reflrctDSS.BackFace.StencilFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+	reflrctDSS.BackFace.StencilPassOp = D3D12_STENCIL_OP_REPLACE;
+
+	
+	dgpsd.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+	dgpsd.DepthStencilState = reflrctDSS;
+	dgpsd.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
+	dgpsd.RasterizerState.FrontCounterClockwise = true;
+	if (FAILED(d3ddevice->CreateGraphicsPipelineState(&dgpsd, IID_PPV_ARGS(PsoMap["reflectpso"].GetAddressOf()))))
+	{
+		return;
+	}
+	dgpsd.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+	dgpsd.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
+	dgpsd.BlendState.RenderTarget[0] = drtbd;
+	if (FAILED(d3ddevice->CreateGraphicsPipelineState(&dgpsd, IID_PPV_ARGS(PsoMap["transparetn"].GetAddressOf()))))
+	{
+		return;
+	}
+
 }
 
 
@@ -654,7 +859,7 @@ void XDirectT::CreateTexture()
 {
 	text2d = make_unique<Tecture>();
 	text2d->name = "text2d";
-	text2d->filename= L"D:/Textures/bricks.dds";
+	text2d->filename= L"D:/bricks.dds";
 	if (FAILED(CreateDDSTextureFromFile12(d3ddevice.Get(), CommandList.Get(), text2d->filename.c_str(), text2d->Resource, text2d->UploadReource)))
 	{
 		return ;
@@ -784,14 +989,14 @@ void XDirectT::Draw()
 	CD3DX12_GPU_DESCRIPTOR_HANDLE tex(srvheap->GetGPUDescriptorHandleForHeapStart());
 
 	CommandList->SetGraphicsRootSignature(RootSignature.Get());
-	CommandList->IASetVertexBuffers(0, 1, &boxMesh->getVertxView());
-	CommandList->IASetIndexBuffer(&boxMesh->GetIndexView());
+	CommandList->IASetVertexBuffers(0, 1, &skullmesh->getVertxView());
+	CommandList->IASetIndexBuffer(&skullmesh->GetIndexView());
 	CommandList->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	
 	CommandList->SetGraphicsRootConstantBufferView(0, currentframeresource->objmatrix->Getresource()->GetGPUVirtualAddress());
 	CommandList->SetGraphicsRootConstantBufferView(1, currentframeresource->objmatrixa->Getresource()->GetGPUVirtualAddress());
-	CommandList->SetGraphicsRootDescriptorTable(2, tex)
-	CommandList->DrawIndexedInstanced(boxMesh->indexcount, 1, 0, 0, 0);
+	CommandList->SetGraphicsRootDescriptorTable(2, tex);
+	CommandList->DrawIndexedInstanced(skullmesh->indexcount, 1, 0, 0, 0);
 	CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(SwpainChianBuff[CurrentBuffnum].Get(),
 		D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
 

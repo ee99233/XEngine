@@ -3,6 +3,7 @@
 #include <wrl.h>
 #include <string>
 #include <DirectXMath.h>
+#include <unordered_map>
 using namespace DirectX;
 using std::string;
 
@@ -14,6 +15,16 @@ struct XMaterail
 	float metallic;
 };
 
+
+struct SubMesh
+{
+
+	UINT IndexCount = 0;
+	UINT StartIndexLocation = 0;
+	INT BaseVertexLocation = 0;
+	
+
+};
 
 class StaticMesh
 {
@@ -35,6 +46,8 @@ public:
 	UINT VStrideInBytes;
 	UINT ISizeInBytes;
 	UINT indexcount;
+	std::unordered_map<std::string, SubMesh> DrawArgs;
+
 	XMaterail xmat;
 private:
 	

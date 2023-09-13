@@ -13,6 +13,8 @@
 #include "StaticMesh.h"
 #include "Light.h"
 #include "FrameResource.h"
+#include <map>
+#include <unordered_map>
 using namespace std;
 using namespace XMath;
 struct Tecture;
@@ -99,13 +101,18 @@ public:
 	Microsoft::WRL::ComPtr<ID3D12Resource> UploadGpuBuff;
 
 	unique_ptr<StaticMesh> boxMesh;
+	unique_ptr<StaticMesh> floormesh;
 
+
+	std::unordered_map<string, unique_ptr<StaticMesh>> meshMap;
 	unique_ptr<FrameResource> frameResource[3];
 	UINT16 framresourcenum;
 	FrameResource* currentframeresource;
 	Matrix1 objConstants1;
 	POINT mLastMousePos;
 	unique_ptr<Tecture> text2d;
+	unique_ptr<StaticMesh> skullmesh;
+	map<string, Microsoft::WRL::ComPtr<ID3D12PipelineState>> PsoMap;
 	 
 };
 

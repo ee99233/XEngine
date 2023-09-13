@@ -31,7 +31,7 @@ D3D12_INDEX_BUFFER_VIEW StaticMesh::GetIndexView()
 {
 	D3D12_INDEX_BUFFER_VIEW didv;
 	didv.BufferLocation = Indexbuff->GetGPUVirtualAddress();
-	didv.Format = DXGI_FORMAT_R16_UINT;
+	didv.Format = DXGI_FORMAT_R32_UINT;
 	didv.SizeInBytes = ISizeInBytes;
 	return didv;
 }

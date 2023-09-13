@@ -13,7 +13,22 @@ namespace XMath
 		XMFLOAT4 Color;
 		XMFLOAT3 Normal;
 		XMFLOAT2 TextCord;
-	
+		XVertx4() 
+		{
+
+		}
+		XVertx4(float x, float y, float z,float nx, float ny, float nz, float u, float v) :
+			Pos(x, y, z),
+			Normal(nx, ny, nz),
+			TextCord(u, v) {}
+		XVertx4(XMFLOAT3 tespos, XMFLOAT4 tesColor, XMFLOAT3 tesNormal, XMFLOAT2 tesTextCord) :
+			Pos(tespos),
+			Color(tesColor),
+			Normal(tesNormal),
+			TextCord(tesTextCord) {}
+		XVertx4(XMFLOAT3 tespos, XMFLOAT4 tesColor) :
+			Pos(tespos),
+			Color(tesColor) {}
 
 	};
 	struct  XVertx2

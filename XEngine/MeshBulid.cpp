@@ -45,7 +45,7 @@ void MeshBulid::CreateCyliner(float topr, float bottomr, UINT xrcount, UINT stat
 			float mTheta = dw * j;
 			float x = r * cosf(mTheta);
 			float y = r * sinf(mTheta);
-			vertxs.push_back(std::move(XVertx4({ XMFLOAT3(x, y, z), XMFLOAT4(Colors::Cyan) })));
+			//vertxs.push_back(std::move(XVertx4({ XMFLOAT3(x, y, z), XMFLOAT4(Colors::Cyan) })));
 		}
 	}
 	UINT cylinerindex = vertxs.size();
@@ -77,8 +77,8 @@ void MeshBulid::CreateCyliner(float topr, float bottomr, UINT xrcount, UINT stat
 
 	float maxz = -0.5f * High + statckcount * dh;
 	float minz = -0.5f * High;
-	vertxs.push_back(std::move(XVertx4({ XMFLOAT3(0.f, 0.f,minz), XMFLOAT4(Colors::Cyan) })));
-	vertxs.push_back(std::move(XVertx4({ XMFLOAT3(0.f, 0.f,maxz), XMFLOAT4(Colors::Cyan) })));
+	//vertxs.push_back(std::move(XVertx4({ XMFLOAT3(0.f, 0.f,minz), XMFLOAT4(Colors::Cyan) })));
+	//vertxs.push_back(std::move(XVertx4({ XMFLOAT3(0.f, 0.f,maxz), XMFLOAT4(Colors::Cyan) })));
 	for (int i = 0; i < xrcount;i++)
 	{
 		
