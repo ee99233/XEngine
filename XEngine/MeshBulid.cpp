@@ -148,102 +148,75 @@ void MeshBulid::CreateGrid(UINT width, UINT height, UINT m, UINT n, OUT vector<X
 
 }
 
-void MeshBulid::CreateSphere(UINT r, UINT m, UINT n, OUT vector<XVertx4> &invertxs, OUT vector<UINT16>& inindex)
+void MeshBulid::CreateSphere(INT r, UINT m, UINT n, OUT vector<XVertx4> &invertxs, OUT vector<UINT>& inindex)
 {
 
-	float dphi = PI / n;
-	float dth = 2 * PI / m;
-	float du = 1.0f / m;
-	float dv = 1.0f / n;
-	for (int h = 1;h< n; ++h)
+	XVertx4 TopVertx(0.0, 0.0, r, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f);
+	XVertx4 BottomVertx(0.0, 0.0, -r, 0.0f, 0.0f, -1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f);
+	invertxs.push_back(TopVertx);
+
+	float thetastep = 2.0 * XM_PI / m;
+	float phistep = XM_PI / n;
+
+	for (int i = 1; i <= n - 1; i++)
 	{
-		float v =1- dv * h;
- 		float phi = PI-dphi * h;
-		float sinr = sinf(phi)*r;
-		for (int j = 0; j <= m; ++j)
+		float phi = phistep * i;
+		for (int j = 0; j <= m; j++)
 		{
-			float th = 2*PI-dth * j;
-			float x = cosf(th) * sinr;
-			float y = sinf(th)*sinr;
-			float z = cosf(phi)*r;
-			float u = du * j;
-			invertxs.push_back(std::move(XVertx4({ XMFLOAT3(x, y, z), XMFLOAT4(Colors::Cyan),XMFLOAT3(0,0,0),XMFLOAT2(u,v) }))); 
+			float theta = thetastep * j;
+
+			XVertx4 v;
+			v.Pos.x = r * sinf(phi) * cosf(theta);
+			v.Pos.y = r * sinf(phi) * sinf(theta);
+			v.Pos.z = r * cosf(phi);
+
+			v.Tangent.x = -r * sinf(phi) * sinf(theta);
+			v.Tangent.y = r * sinf(phi) * cosf(theta);
+			v.Tangent.z = 0;
+			XMVECTOR T = XMLoadFloat3(&v.Tangent);
+			XMStoreFloat3(&v.Tangent, XMVector3Normalize(T));
+
+			XMVECTOR p = XMLoadFloat3(&v.Pos);
+			XMStoreFloat3(&v.Normal, XMVector3Normalize(p));
+
+			v.TextCord.x = theta / XM_2PI;
+			v.TextCord.y = phi / XM_PI;
+			invertxs.push_back(v);	
 		}
 	}
-	int rcount = m + 1;
-	for (int h = 0; h < n-2; ++h)
+	invertxs.push_back(BottomVertx);
+	for (UINT i = 1; i <= m; ++i)
 	{
-		for (int i = 0; i < m; ++i)
-		{
-			inindex.push_back(h*(rcount)+i);
-			inindex.push_back((h+1)*rcount+i);
-			inindex.push_back((h+1)*rcount+i+1);
-
-
-			inindex.push_back(h*rcount+i);
-			inindex.push_back((h+1)*rcount+i+1);
-			inindex.push_back(h*rcount+i+1);
-
-		}
-
-	}
-	float xr = r;
-
-
-	
-
-	invertxs.push_back(std::move(XVertx4({ XMFLOAT3(0, 0, -xr), XMFLOAT4(Colors::Cyan),XMFLOAT3(0,0,0),XMFLOAT2(0,0) })));
-	invertxs.push_back(std::move(XVertx4({ XMFLOAT3(0, 0, xr), XMFLOAT4(Colors::Cyan),XMFLOAT3(0,0,0),XMFLOAT2(0,0) })));
-
-
-	int index = invertxs.size();
-	for (int i = 0; i < m; ++i)
-	{
-		
-		inindex.push_back((n - 2)*rcount + i);
-		inindex.push_back(index - 1);
-		inindex.push_back((n - 2)*rcount + i+1);
-		
-	
-		
-		inindex.push_back(i+1);
-		inindex.push_back(index - 2);
+		inindex.push_back(0);
+		inindex.push_back(i + 1);
 		inindex.push_back(i);
-		
-		
 	}
-
-	UINT Trinum = inindex.size();
-
-	for (int i = 0; i < Trinum; i += 3)
+	UINT baseindex = 1;
+	UINT Ringcount = m + 1;
+	for (UINT i = 0; i < n-2; ++i)
 	{
-		
-		XMFLOAT3 p1 = invertxs[inindex[i]].Pos;
-		XMFLOAT3 p2 = invertxs[inindex[i+1]].Pos;
-		XMFLOAT3 p3 = invertxs[inindex[i + 2]].Pos;
+		for (UINT j = 0; j < m; ++j)
+		{
+			inindex.push_back(baseindex + i * Ringcount + j);
+			inindex.push_back(baseindex + i * Ringcount + j+1);
+			inindex.push_back(baseindex + (i+1) * (Ringcount) + j);
 
-		XMFLOAT3 v1(p2.x - p1.x, p2.y - p1.y, p2.z - p1.z);
-		XMFLOAT3 v2(p3.x - p1.x, p3.y - p1.y, p3.z - p1.z);
-
-		XMFLOAT3 n = CrossTS(v1, v2);
-
-		invertxs[inindex[i]].Normal.x += n.x;
-		invertxs[inindex[i]].Normal.y += n.y;
-		invertxs[inindex[i]].Normal.z += n.z;
-
-		invertxs[inindex[i+1]].Normal.x += n.x;
-		invertxs[inindex[i+1]].Normal.y += n.y;
-		invertxs[inindex[i+1]].Normal.z += n.z;
-
-		invertxs[inindex[i+2]].Normal.x += n.x;
-		invertxs[inindex[i+2]].Normal.y += n.y;
-		invertxs[inindex[i+2]].Normal.z += n.z;
+			inindex.push_back(baseindex + (i+1) * Ringcount + j);
+			inindex.push_back(baseindex + i * Ringcount + j + 1);
+			inindex.push_back(baseindex + (i+1) * (Ringcount) + j+1);
+		}
 	}
-	
-
+	UINT SourcePoleinex = invertxs.size() - 1;
+	baseindex = SourcePoleinex - Ringcount;
+	for (UINT i=0; i < m; ++i)
+	{
+		inindex.push_back(SourcePoleinex);
+		inindex.push_back(baseindex + i);
+		inindex.push_back(baseindex + i + 1);
+	}
 }
 
-void MeshBulid::CreateBox(float w, float h, float d, OUT vector<XVertx4> &invertxs, OUT vector<UINT16>& inindex)
+void MeshBulid::CreateBox(float w, float h, float d, OUT vector<XVertx4> &invertxs, OUT vector<UINT>& inindex)
 {
 
 	float w2 = w / 2.0f;
@@ -251,35 +224,35 @@ void MeshBulid::CreateBox(float w, float h, float d, OUT vector<XVertx4> &invert
 	float d2 = h / 2.0f;
 
 	invertxs.reserve(24);
-	invertxs.push_back(XVertx4({ XMFLOAT3(-w2, -h2, -d2), XMFLOAT4(Colors::Cyan),XMFLOAT3(0,0,0),XMFLOAT2(0.0f,1.0f) }));
-	invertxs.push_back(XVertx4({ XMFLOAT3(-w2, h2, -d2), XMFLOAT4(Colors::Cyan),XMFLOAT3(0,0,0),XMFLOAT2(0.0f,0.0f) }));
-	invertxs.push_back(XVertx4({ XMFLOAT3(w2, h2, -d2), XMFLOAT4(Colors::Cyan),XMFLOAT3(0,0,0),XMFLOAT2(1.0f,0.0f) }));
-	invertxs.push_back(XVertx4({ XMFLOAT3(w2, -h2, -d2), XMFLOAT4(Colors::Cyan),XMFLOAT3(0,0,0),XMFLOAT2(1.0f,0.0f) }));
+	invertxs.push_back(XVertx4(-w2, -h2, -d2, 0.0f, 0.0f, -1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f));
+	invertxs.push_back(XVertx4(-w2, +h2, -d2, 0.0f, 0.0f, -1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f));
+	invertxs.push_back(XVertx4(+w2, +h2, -d2, 0.0f, 0.0f, -1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f));
+	invertxs.push_back(XVertx4(+w2, -h2, -d2, 0.0f, 0.0f, -1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f));
 
-	invertxs.push_back(XVertx4({ XMFLOAT3(-w2, -h2, d2), XMFLOAT4(Colors::Cyan),XMFLOAT3(0,0,0),XMFLOAT2(1.0f,1.0f) }));
-	invertxs.push_back(XVertx4({ XMFLOAT3(w2, -h2, d2), XMFLOAT4(Colors::Cyan),XMFLOAT3(0,0,0),XMFLOAT2(0.0f,1.0f) }));
-	invertxs.push_back(XVertx4({ XMFLOAT3(w2, h2, d2), XMFLOAT4(Colors::Cyan),XMFLOAT3(0,0,0),XMFLOAT2(0.0f,0.0f) }));
-	invertxs.push_back(XVertx4({ XMFLOAT3(-w2,h2,d2), XMFLOAT4(Colors::Cyan),XMFLOAT3(0,0,0),XMFLOAT2(1.0f,0.0f) }));
+	invertxs.push_back(XVertx4(-w2, -h2, +d2, 0.0f, 0.0f, 1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 1.0f));
+	invertxs.push_back(XVertx4(+w2, -h2, +d2, 0.0f, 0.0f, 1.0f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f));
+	invertxs.push_back(XVertx4(+w2, +h2, +d2, 0.0f, 0.0f, 1.0f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f));
+	invertxs.push_back(XVertx4(-w2, +h2, +d2, 0.0f, 0.0f, 1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f));
 
-	invertxs.push_back(XVertx4({ XMFLOAT3(-w2, +h2, -d2), XMFLOAT4(Colors::Cyan),XMFLOAT3(0,0,0),XMFLOAT2(0.0f,1.0f) }));
-	invertxs.push_back(XVertx4({ XMFLOAT3(-w2, h2, d2), XMFLOAT4(Colors::Cyan),XMFLOAT3(0,0,0),XMFLOAT2(0.0f,0.0f) }));
-	invertxs.push_back(XVertx4({ XMFLOAT3(w2, h2, d2), XMFLOAT4(Colors::Cyan),XMFLOAT3(0,0,0),XMFLOAT2(1.0f,0.0f) }));
-	invertxs.push_back(XVertx4({ XMFLOAT3(w2, h2, -d2), XMFLOAT4(Colors::Cyan),XMFLOAT3(0,0,0),XMFLOAT2(1.0f,1.0f) }));
+	invertxs.push_back(XVertx4(-w2, +h2, -d2, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f));
+	invertxs.push_back(XVertx4(-w2, +h2, +d2, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f));
+	invertxs.push_back(XVertx4(+w2, +h2, +d2, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f));
+	invertxs.push_back(XVertx4(+w2, +h2, -d2, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f));
 
-	invertxs.push_back(XVertx4({ XMFLOAT3(-w2, -h2, -d2), XMFLOAT4(Colors::Cyan),XMFLOAT3(0,0,0),XMFLOAT2(1.0f,1.0f) }));
-	invertxs.push_back(XVertx4({ XMFLOAT3(w2, -h2,-d2), XMFLOAT4(Colors::Cyan),XMFLOAT3(0,0,0),XMFLOAT2(0.0f,1.0f) }));
-	invertxs.push_back(XVertx4({ XMFLOAT3(w2, -h2, +d2), XMFLOAT4(Colors::Cyan),XMFLOAT3(0,0,0),XMFLOAT2(0.0f,0.0f) }));
-	invertxs.push_back(XVertx4({ XMFLOAT3(-w2, -h2, d2), XMFLOAT4(Colors::Cyan),XMFLOAT3(0,0,0),XMFLOAT2(1.0f,0.0f) }));
+	invertxs.push_back(XVertx4(-w2, -h2, -d2, 0.0f, -1.0f, 0.0f, -1.0f, 0.0f, 0.0f, 1.0f, 1.0f));
+	invertxs.push_back(XVertx4(+w2, -h2, -d2, 0.0f, -1.0f, 0.0f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f));
+	invertxs.push_back(XVertx4(+w2, -h2, +d2, 0.0f, -1.0f, 0.0f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f));
+	invertxs.push_back(XVertx4(-w2, -h2, +d2, 0.0f, -1.0f, 0.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f));
 
-	invertxs.push_back(XVertx4({ XMFLOAT3(-w2, -h2, d2), XMFLOAT4(Colors::Cyan),XMFLOAT3(0,0,0),XMFLOAT2(0.0f,1.0f) }));
-	invertxs.push_back(XVertx4({ XMFLOAT3(-w2, h2, d2), XMFLOAT4(Colors::Cyan),XMFLOAT3(0,0,0),XMFLOAT2(0.0f,0.0f) }));
-	invertxs.push_back(XVertx4({ XMFLOAT3(-w2, h2, -d2), XMFLOAT4(Colors::Cyan),XMFLOAT3(0,0,0),XMFLOAT2(1.0f,0.0f) }));
-	invertxs.push_back(XVertx4({ XMFLOAT3(-w2,-h2,-d2), XMFLOAT4(Colors::Cyan),XMFLOAT3(0,0,0),XMFLOAT2(1.0f,1.0f) }));
+	invertxs.push_back(XVertx4(-w2, -h2, +d2, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f, -1.0f, 0.0f, 1.0f));
+	invertxs.push_back(XVertx4(-w2, +h2, +d2, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f));
+	invertxs.push_back(XVertx4(-w2, +h2, -d2, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f, -1.0f, 1.0f, 0.0f));
+	invertxs.push_back(XVertx4(-w2, -h2, -d2, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f, -1.0f, 1.0f, 1.0f));
 
-	invertxs.push_back(XVertx4({ XMFLOAT3(+w2, -h2, -d2), XMFLOAT4(Colors::Cyan),XMFLOAT3(0,0,0),XMFLOAT2(0.0f,1.0f) }));
-	invertxs.push_back(XVertx4({ XMFLOAT3(+w2, h2, -d2), XMFLOAT4(Colors::Cyan),XMFLOAT3(0,0,0),XMFLOAT2(0.0f,0.0f) }));
-	invertxs.push_back(XVertx4({ XMFLOAT3(w2, h2, d2), XMFLOAT4(Colors::Cyan),XMFLOAT3(0,0,0),XMFLOAT2(1.0f,0.0f) }));
-	invertxs.push_back(XVertx4({ XMFLOAT3(w2, -h2, d2), XMFLOAT4(Colors::Cyan),XMFLOAT3(0,0,0),XMFLOAT2(1.0f,1.0f) }));
+	invertxs.push_back(XVertx4(+w2, -h2, -d2, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f));
+	invertxs.push_back(XVertx4(+w2, +h2, -d2, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f));
+	invertxs.push_back(XVertx4(+w2, +h2, +d2, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f));
+	invertxs.push_back(XVertx4(+w2, -h2, +d2, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f));
 
 	inindex.reserve(36);
 	inindex.push_back(0); inindex.push_back(1); inindex.push_back(2);
@@ -295,27 +268,6 @@ void MeshBulid::CreateBox(float w, float h, float d, OUT vector<XVertx4> &invert
 	inindex.push_back(20); inindex.push_back(21); inindex.push_back(22);
 	inindex.push_back(20); inindex.push_back(22); inindex.push_back(23);
 
-	for (int i = 0; i < inindex.size(); i += 3)
-	{
-		XMFLOAT3 p1 = invertxs[inindex[i]].Pos;
-		XMFLOAT3 p2 = invertxs[inindex[i+1]].Pos;
-		XMFLOAT3 p3 = invertxs[inindex[i+2]].Pos;
-		XMFLOAT3 v1(p2.x - p1.x, p2.y - p1.y, p2.z - p1.z);
-		XMFLOAT3 v2(p3.x - p1.x, p3.y - p1.y, p3.z - p1.z);
-		XMFLOAT3 Normal = CrossTS(v1, v2);;
-		invertxs[inindex[i]].Normal.x+= Normal.x;
-		invertxs[inindex[i]].Normal.y += Normal.y;
-		invertxs[inindex[i]].Normal.z += Normal.z;
-
-		invertxs[inindex[i+1]].Normal.x += Normal.x;
-		invertxs[inindex[i+1]].Normal.y += Normal.y;
-		invertxs[inindex[i+1]].Normal.z += Normal.z;
-
-
-		invertxs[inindex[i+2]].Normal.x += Normal.x;
-		invertxs[inindex[i+2]].Normal.y += Normal.y;
-		invertxs[inindex[i+2]].Normal.z += Normal.z;
-	}
 
 	
 

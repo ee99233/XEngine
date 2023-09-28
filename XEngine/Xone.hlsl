@@ -14,7 +14,6 @@ SamplerState gsamAnisotropicClamp : register(s5);
 cbuffer cbproject : register(b0)
 {
     float4x4 gWorldtoview;
-    float test;
 }
 
 cbuffer cbtest: register(b1)
@@ -35,9 +34,10 @@ cbuffer cbtest: register(b1)
 struct VertexIn
 {
     float3 PosL : POSITION;
-    float4 Color : COLOR;
     float3 NORMAL : NORMAL;
+    float3 Tangent: TANGENT;
     float2 TextCord : TEXCOORD;
+    float4 Color : COLOR;
 };
 
 struct VertexOut
@@ -46,6 +46,7 @@ struct VertexOut
     float4 Color : COLOR;
     float4 PosW : POSITIONT;
     float3 Normal : NORMAL;
+    float3 Tangent : TANGENT;
     float2 TextCord : TEXCOORD;
 };
 
@@ -60,6 +61,7 @@ VertexOut VS(VertexIn pin)
     vout.Normal = mul(pin.NORMAL, (float3x3) gworld);
     vout.TextCord = pin.TextCord;
     vout.Color = pin.Color;
+    vout.Tangent = pin.Tangent;
     return vout;
 
 }
@@ -67,8 +69,7 @@ VertexOut VS(VertexIn pin)
 float4 PS(VertexOut pout) : SV_Target
 {
     float4 colorc = BrickMap.Sample(gsamAnisotropicClamp, pout.TextCord);
-    float3 co;
-    co = float3(1.0f, 0.f, 0.f);
+    float3 co=float3(1.0f,0.0,0.0f);
     float3 V = normalize(Campos - (float3) pout.PosW);
     float3 N = normalize(pout.Normal);
     float3 F0 = 0.08;
@@ -81,8 +82,6 @@ float4 PS(VertexOut pout) : SV_Target
         float Llength = length(light[i].LoghtPos - (float3) pout.PosW);
        
         float atten = 1.0f / (Llength * Llength);
-        
-           
         float3 H = normalize(V + L);
         float NOL = saturate(dot(N, L));
         float VOH = saturate(dot(V, H));

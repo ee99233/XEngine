@@ -34,7 +34,7 @@ float GGXNDF(float Rougress,float NOH)
 
 float3 SchickFrenel(float3 F0,float VOH)
 {
-    return F0 + (1 - F0) * pow(1 - VOH, 5.0);
+    return F0 + (1.0 - F0) * pow(1.0 - VOH, 5.0);
 
 }
 
@@ -80,7 +80,7 @@ float3 SpecularIBL(float3 SpecularColor,float Rougress, float3 N,float3 V)
     {
         
         float2 XI = Hammersley(i, NunSample);
-        float3 H = ImportGGX(Rougress, N, XI);
+        float3 H = ImportGGX(3, N, XI);
         float3 L = 2 * dot(V, H) * H - V;
         float NOL = saturate(dot(N, L));
         float VOH = saturate(dot(V, H));

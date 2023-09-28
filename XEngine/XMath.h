@@ -10,17 +10,20 @@ namespace XMath
 	struct XVertx4
 	{
 		XMFLOAT3 Pos;
-		XMFLOAT4 Color;
 		XMFLOAT3 Normal;
+		XMFLOAT3 Tangent;
 		XMFLOAT2 TextCord;
+		XMFLOAT4 Color;
 		XVertx4() 
 		{
 
 		}
-		XVertx4(float x, float y, float z,float nx, float ny, float nz, float u, float v) :
+		XVertx4(float x, float y, float z,float nx, float ny, float nz,float tx,float ty,float tz, float u, float v ) :
 			Pos(x, y, z),
 			Normal(nx, ny, nz),
-			TextCord(u, v) {}
+			Tangent(tx,ty,tz),
+			TextCord(u, v),
+			Color(1.0,0.0,0.0,1.0){}
 		XVertx4(XMFLOAT3 tespos, XMFLOAT4 tesColor, XMFLOAT3 tesNormal, XMFLOAT2 tesTextCord) :
 			Pos(tespos),
 			Color(tesColor),
@@ -63,7 +66,6 @@ namespace XMath
 	struct Matrix
 	{
 		XMFLOAT4X4 WorldtoviewMatrix = Identity4x4();
-		float test = 1.0f;
 	};
 	struct Matrix1
 	{
